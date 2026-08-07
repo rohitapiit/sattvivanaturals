@@ -131,15 +131,13 @@ const [finalAmount, setFinalAmount] =
   }, []);
 
   useEffect(() => {
-    const total = checkoutItems.reduce(
+    const subtotal = checkoutItems.reduce(
       (sum, item) =>
         sum + item.product.price * item.quantity,
       0
     );
   
-    if (discount === 0) {
-      setFinalAmount(total);
-    }
+    setFinalAmount(subtotal - discount);
   }, [checkoutItems, discount]);
 
 useEffect(() => {
@@ -538,6 +536,52 @@ console.log("Final Amount:", data.finalAmount);
     console.error(error);
   }
 };
+
+  // Reset everything coupon-related back to "no coupon applied" state.
+  // This is the single source of truth for "un-applying" a coupon —
+  // every place that clears/changes the coupon must go through this so
+  // discount and finalAmount never get left stale.
+  const removeCoupon = () => {
+    setCouponCode("");
+    setAppliedCoupon(null);
+    setDiscount(0);
+
+    const subtotal = checkoutItems.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0
+    );
+
+    setFinalAmount(subtotal);
+
+    setPaymentMethod("COD");
+  };
+
+  // Called whenever the coupon code text changes but the user hasn't
+  // fully cleared it (e.g. they're editing/backspacing a previously
+  // applied code, or picking a different suggested coupon). Previously
+  // this only cleared `appliedCoupon` (so the ✓ badge went away) but
+  // left `discount`/`finalAmount` untouched, which is why the price
+  // didn't reset when "unapplying" a coupon. Now it fully resets the
+  // discount too, unless the new value still matches the applied code.
+  const handleCouponCodeChange = (newValue) => {
+    setCouponCode(newValue);
+
+    const trimmed = newValue.trim();
+
+    if (appliedCoupon && appliedCoupon !== trimmed) {
+      setAppliedCoupon(null);
+      setDiscount(0);
+      setPaymentMethod("COD");
+
+      const subtotal = checkoutItems.reduce(
+        (sum, item) => sum + item.product.price * item.quantity,
+        0
+      );
+
+      setFinalAmount(subtotal);
+    }
+  };
+
 
 
   const handlePlaceOrder = async () => {
@@ -1451,13 +1495,7 @@ className="border rounded-lg p-3 bg-gray-100"
 
         <button
           className="bg-green-600 text-white px-4 py-2 rounded-lg"
-          onClick={() => {
-            setCouponCode(coupon.code);
-
-            if (appliedCoupon && appliedCoupon !== coupon.code) {
-              setAppliedCoupon(null);
-            }
-          }}
+          onClick={() => handleCouponCodeChange(coupon.code)}
         >
           Use
         </button>
@@ -1472,32 +1510,37 @@ className="border rounded-lg p-3 bg-gray-100"
     type="text"
     placeholder="Enter Coupon Code"
     value={couponCode}
-    onChange={(e) => {
-      const value = e.target.value;
-
-      setCouponCode(value);
-
-      if (appliedCoupon && appliedCoupon !== value.trim()) {
-        setAppliedCoupon(null);
-      }
-    }}
+    onChange={(e) => handleCouponCodeChange(e.target.value)}
     className="w-full border rounded-lg p-3"
   />
 
-  <button
-    onClick={applyCoupon}
-    disabled={
-      Boolean(appliedCoupon) &&
+  <div className="flex gap-3 mt-3">
+    <button
+      onClick={applyCoupon}
+      disabled={
+        Boolean(appliedCoupon) &&
+        appliedCoupon === couponCode.trim()
+      }
+      className="flex-1 bg-orange-500 text-white py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+    >
+      {Boolean(appliedCoupon) &&
       appliedCoupon === couponCode.trim()
-    }
-    className="w-full mt-3 bg-orange-500 text-white py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-  >
-    {Boolean(appliedCoupon) &&
-    appliedCoupon === couponCode.trim()
-      ? "Coupon Applied ✓"
-      : "Apply Coupon"}
-  </button>
+        ? "Coupon Applied ✓"
+        : "Apply Coupon"}
+    </button>
+
+    {isCouponApplied && (
+      <button
+        onClick={removeCoupon}
+        className="px-4 py-3 rounded-lg border border-red-500 text-red-500 hover:bg-red-50"
+      >
+        Remove
+      </button>
+    )}
+  </div>
 </div>
+
+
 
 
           <div className="space-y-3 mt-8">
