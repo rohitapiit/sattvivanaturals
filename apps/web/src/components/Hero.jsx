@@ -12,9 +12,9 @@ const Hero = () => {
   ];
   
   const mobileBanners = [
-    "images/banner-mobile-1.png",
-    "images/banner-mobile-2.png",
-    "images/banner-mobile-3.png",
+    "images/banner_mobile.png",
+    "images/banner_mobile2.png",
+    "images/banner_mobile3.png",
   ];
   
   const [currentBanner, setCurrentBanner] = useState(0);
