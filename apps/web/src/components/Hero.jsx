@@ -6,12 +6,14 @@ import { ArrowRight, FileText } from 'lucide-react';
 
 const Hero = () => {
   const desktopBanners = [
+    "images/banner_new4.jpeg",
     "images/banner_new1.png",
     "images/banner_new2.png",
     "images/banner_new3.png",
   ];
   
   const mobileBanners = [
+    "images/banner_mobile4.png",
     "images/banner_mobile.png",
     "images/banner_mobile2.png",
     "images/banner_mobile3.png",
