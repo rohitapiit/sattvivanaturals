@@ -186,7 +186,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                       to="/products/oils"
                       className="block text-sm text-primary-foreground/70 hover:text-green-300"
                     >
-                      Oils
+                     Wood Pressed Oils
                     </Link>
 
                   </div>
