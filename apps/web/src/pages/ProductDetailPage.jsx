@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart, Loader2, ArrowLeft, CheckCircle, Minus, Plus, XCircle, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import {ShoppingCart,Loader2,ArrowLeft,CheckCircle,Minus,Plus,XCircle,ChevronLeft,ChevronRight,ChevronDown,ChevronUp,Star} from 'lucide-react';
+import ReactGA from "react-ga4";
 const API = import.meta.env.VITE_API_URL;
 
 const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzc0MTUxIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K";
@@ -15,6 +16,13 @@ function ProductDetailPage() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
+
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [visibleReviewCount, setVisibleReviewCount] = useState(3);
+const [expandedReviews, setExpandedReviews] = useState({});
 
   const [selectedVariant, setSelectedVariant] = useState(null);
 
@@ -31,6 +39,39 @@ const [position, setPosition] = useState({
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
   const { toast } = useToast();
+
+useEffect(() => {
+  const fetchReviews = async () => {
+    try {
+      setReviewsLoading(true);
+
+      const response = await fetch(
+        `${API}/reviews/product/${id}`
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+  setReviews(data.reviews || []);
+  setAverageRating(data.averageRating || 0);
+  setTotalReviews(data.totalReviews || 0);
+} else {
+        console.error(data.message);
+      }
+    } catch (error) {
+      console.error(
+        "FETCH PRODUCT REVIEWS ERROR:",
+        error
+      );
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  if (id) {
+    fetchReviews();
+  }
+}, [id]);
 
   const handleAddToCart = useCallback(async () => {
     if (product && selectedVariant) {
@@ -70,12 +111,28 @@ const [position, setPosition] = useState({
         };
         
         await addToCart(
-          formattedProduct,
-          formattedVariant,
-          quantity,
-          availableQuantity
-        );
-        setAdded(true);
+  formattedProduct,
+  formattedVariant,
+  quantity,
+  availableQuantity
+);
+
+// GA4 - Add to Cart event
+ReactGA.event("add_to_cart", {
+  currency: "INR",
+  value: selectedVariant.price * quantity,
+  items: [
+    {
+      item_id: product._id,
+      item_name: product.title,
+      item_variant: selectedVariant.size || "Default",
+      price: selectedVariant.price,
+      quantity: quantity,
+    },
+  ],
+});
+
+setAdded(true);
 
         setTimeout(() => {
           setAdded(false);
@@ -316,6 +373,26 @@ const [position, setPosition] = useState({
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="flex flex-col min-w-0 w-full">
             {/* Title scales down on phones so long product names don't wrap awkwardly */}
+
+            {totalReviews > 0 && (
+  <div className="flex items-center gap-2 mb-2">
+    <div className="flex items-center">
+      <span className="text-yellow-400 text-lg">
+        ★
+      </span>
+
+      <span className="ml-1 font-semibold text-gray-700">
+        {averageRating.toFixed(1)}
+      </span>
+    </div>
+
+    <span className="text-gray-500 text-sm">
+      ({totalReviews} {totalReviews === 1 ? "review" : "reviews"})
+    </span>
+  </div>
+)}
+
+
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-2 break-words">{product.title}</h1>
 
             <p className="text-base sm:text-lg text-gray-600 mb-4">
@@ -539,6 +616,150 @@ const [position, setPosition] = useState({
             </div>
           </div>
         </div>
+
+
+
+      <div className="mt-10">
+
+  <h2 className="text-2xl font-semibold mb-6">
+    Customer Reviews
+  </h2>
+
+  {reviewsLoading ? (
+    <p className="text-gray-500">
+      Loading reviews...
+    </p>
+  ) : reviews.length === 0 ? (
+    <p className="text-gray-500">
+      No reviews yet for this product.
+    </p>
+  ) : (
+    <>
+      <div className="space-y-5">
+
+        {reviews.slice(0, visibleReviewCount).map((item) => {
+
+          const isExpanded = expandedReviews[item._id];
+
+          // Approximate check for long reviews
+          const isLongReview =
+            item.review && item.review.length > 200;
+
+          return (
+            <div
+              key={item._id}
+              className="border rounded-xl p-5 bg-white"
+            >
+
+              {/* Customer Name */}
+              <p className="font-semibold">
+                {item.name}
+              </p>
+
+              {/* Guest label */}
+              {item.isGuest && (
+                <span className="text-xs text-gray-400">
+                  Guest Customer
+                </span>
+              )}
+
+              {/* Stars */}
+              <div className="flex mt-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    className={
+                      star <= item.rating
+                        ? "text-yellow-400 text-xl"
+                        : "text-gray-300 text-xl"
+                    }
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+
+              {/* Review text */}
+              <div className="mt-3">
+                <p
+                  className={`text-gray-700 leading-6 ${
+                    !isExpanded && isLongReview
+                      ? "line-clamp-2"
+                      : ""
+                  }`}
+                >
+                  {item.review}
+                </p>
+
+                {/* Read More / Read Less */}
+                {isLongReview && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedReviews((prev) => ({
+                        ...prev,
+                        [item._id]: !prev[item._id],
+                      }))
+                    }
+                    className="mt-1 text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    {isExpanded ? (
+                      <>
+                        Read less
+                        <ChevronUp size={15} />
+                      </>
+                    ) : (
+                      <>
+                        ... Read more
+                        <ChevronDown size={15} />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Images */}
+              {item.images?.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {item.images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt="Customer review"
+                      className="w-20 h-20 object-cover rounded-lg border"
+                    />
+                  ))}
+                </div>
+              )}
+
+            </div>
+          );
+        })}
+
+      </div>
+
+      {/* Show More Reviews */}
+      {visibleReviewCount < reviews.length && (
+        <div className="flex justify-center mt-8">
+          <button
+            type="button"
+            onClick={() =>
+              setVisibleReviewCount((prev) =>
+                Math.min(prev + 5, reviews.length)
+              )
+            }
+            className="flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-full bg-white text-primary font-semibold hover:bg-gray-50 transition"
+          >
+            Show more reviews
+            <ChevronDown size={18} />
+          </button>
+        </div>
+      )}
+
+    </>
+  )}
+
+</div>
 
         {/* Related products: horizontally scrollable card row on every screen
             size, with narrower cards on phones so at least 1.5 cards peek

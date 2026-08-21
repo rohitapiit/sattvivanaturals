@@ -1,4 +1,6 @@
 import Product from "../models/Product.js";
+import Review from "../models/Review.js";
+import GuestReview from "../models/GuestReview.js";
 
 export const createProduct = async (req, res) => {
   try {
@@ -34,22 +36,118 @@ const product = await Product.create(data);
   }
 };
 
+// export const getProducts = async (req, res) => {
+//   try {
+//     const products = await Product.find();
+
+//     res.status(200).json({
+//       success: true,
+//       count: products.length,
+//       products,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find().lean();
+
+    // Logged-in user reviews
+    const userReviewStats = await Review.aggregate([
+      {
+        $group: {
+          _id: "$product",
+          averageRating: { $avg: "$rating" },
+          reviewCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Guest reviews
+    const guestReviewStats = await GuestReview.aggregate([
+      {
+        $group: {
+          _id: "$product",
+          averageRating: { $avg: "$rating" },
+          reviewCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Create maps for quick lookup
+    const userStatsMap = new Map(
+      userReviewStats.map((item) => [
+        item._id.toString(),
+        item,
+      ])
+    );
+
+    const guestStatsMap = new Map(
+      guestReviewStats.map((item) => [
+        item._id.toString(),
+        item,
+      ])
+    );
+
+    // Add rating + review count to every product
+    const productsWithRatings = products.map((product) => {
+      const productId = product._id.toString();
+
+      const userStats = userStatsMap.get(productId);
+      const guestStats = guestStatsMap.get(productId);
+
+      const userCount = userStats?.reviewCount || 0;
+      const guestCount = guestStats?.reviewCount || 0;
+
+      const userAverage = userStats?.averageRating || 0;
+      const guestAverage = guestStats?.averageRating || 0;
+
+      const totalReviews = userCount + guestCount;
+
+      let averageRating = 0;
+
+      if (totalReviews > 0) {
+        averageRating =
+          (
+            (userAverage * userCount) +
+            (guestAverage * guestCount)
+          ) / totalReviews;
+      }
+
+      return {
+        ...product,
+
+        rating:
+          totalReviews > 0
+            ? Number(averageRating.toFixed(1))
+            : 0,
+
+        reviews: totalReviews,
+      };
+    });
 
     res.status(200).json({
       success: true,
-      count: products.length,
-      products,
+      count: productsWithRatings.length,
+      products: productsWithRatings,
     });
+
   } catch (error) {
+    console.error("GET PRODUCTS ERROR:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 
 export const getProductById = async (req, res) => {
   try {

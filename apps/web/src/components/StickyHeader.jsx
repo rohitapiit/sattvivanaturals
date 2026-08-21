@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef,} from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, Menu, User,ChevronDown, Package, MapPin, LogOut } from 'lucide-react';
+import { Search, ShoppingCart, Menu, User,ChevronDown, Package, MapPin, LogOut, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/hooks/useCart';
@@ -281,6 +281,14 @@ useEffect(() => {
             <MapPin size={18} />
             My Addresses
           </Link>
+
+          <Link
+          to="/my-reviews"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
+>
+<Star size={18} />
+  My Reviews
+</Link>
 
           <button
             onClick={handleLogout}

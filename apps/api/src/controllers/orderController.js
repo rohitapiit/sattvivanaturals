@@ -7,6 +7,7 @@ import razorpay from "../config/razorpay.js";
 import Address from "../models/Address.js";
 import PDFDocument from "pdfkit";
 import Counter from "../models/Counter.js";
+import crypto from "crypto";
 
 import {
   createShiprocketOrder,
@@ -27,6 +28,303 @@ const generateOrderId = (seq) => {
   const year = now.getFullYear();
 
   return `SV${day}${month}${year}${seq}`;
+};
+
+// const sendReviewEmail = async (order) => {
+//   try {
+
+//    // ONLY GUEST ORDERS
+//     if (!order.isGuestOrder) {
+//       console.log(
+//         "Skipping guest review email for logged-in order:",
+//         order.orderId
+//       );
+//       return;
+//     }
+//     // Generate secure token for this order
+//     const token = crypto.randomBytes(32).toString("hex");
+
+//     console.log("GENERATED REVIEW TOKEN:", token);
+
+//     // Create review token for the order
+// order.reviewTokens = order.items.map((item) => ({
+//   product: item.product,
+//   token,
+//   expiresAt: new Date(
+//     Date.now() + 7 * 24 * 60 * 60 * 1000
+//   ),
+//   used: false,
+// }));
+
+//     await order.save();
+
+//     console.log(
+//   "AFTER SAVE REVIEW TOKENS:",
+//   order.reviewTokens
+// );
+
+// const savedOrder = await Order.findById(order._id);
+
+// console.log(
+//   "DB CHECK REVIEW TOKENS:",
+//   savedOrder.reviewTokens
+// );
+
+//     console.log(
+//       "SAVED REVIEW TOKENS:",
+//       order.reviewTokens
+//     );
+
+//     const frontendUrl =
+//       process.env.FRONTEND_URL ||
+//       "https://sattvivanaturals.com";
+
+//     const reviewLink =
+//       `${frontendUrl}/guest-review/${token}`;
+
+//       console.log(
+//       "REVIEW LINK:",
+//       reviewLink
+//     );
+
+//     const customerName =
+//       order.shippingAddress.fullName;
+
+//     const customerEmail =
+//       order.shippingAddress.email;
+
+//     const productList = order.items
+//       .map(
+//         (item) =>
+//           `${item.product?.title || "Product"} x ${item.quantity}`
+//       )
+//       .join("\n");
+
+//     const emailSent = await sendEmail(
+//       customerEmail,
+
+//       "How was your SattViva purchase? ⭐",
+
+//       `
+// Hello ${customerName},
+
+// We hope you are enjoying your SattViva Naturals products! 🌿
+
+// Your order ${order.orderId} has been delivered.
+
+// Products:
+// ${productList}
+
+// We would love to hear about your experience.
+
+// Please take a moment to share your feedback:
+
+// ${reviewLink}
+
+// Your feedback helps us improve and also helps other customers make better choices.
+
+// Thank you for choosing SattViva Naturals ❤️
+
+// Regards,
+// SattViva Naturals Team
+// `
+//     );
+
+//     if (emailSent) {
+//       order.reviewEmailSentAt = new Date();
+
+//       await order.save();
+
+//       console.log(
+//         "✅ GUEST REVIEW EMAIL SENT:",
+//         customerEmail
+//       );
+//     } else {
+//       console.log(
+//         "❌ GUEST REVIEW EMAIL FAILED:",
+//         customerEmail
+//       );
+//     }
+
+//   } catch (error) {
+//     console.error(
+//       "GUEST REVIEW EMAIL ERROR:",
+//       error
+//     );
+//   }
+// };
+
+const sendReviewEmail = async (order) => {
+  try {
+
+    // =========================
+    // GENERATE REVIEW TOKEN
+    // =========================
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    console.log(
+      "GENERATED REVIEW TOKEN:",
+      token
+    );
+
+    // =========================
+    // SAVE TOKEN
+    // =========================
+
+    order.reviewTokens = order.items.map((item) => ({
+      product: item.product,
+      token,
+      expiresAt: new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+      ),
+      used: false,
+    }));
+
+    await order.save();
+
+    console.log(
+      "SAVED REVIEW TOKENS:",
+      order.reviewTokens
+    );
+
+    // =========================
+    // CHECK DATABASE
+    // =========================
+
+    const savedOrder =
+      await Order.findById(order._id);
+
+    console.log(
+      "DB CHECK REVIEW TOKENS:",
+      savedOrder.reviewTokens
+    );
+
+    // =========================
+    // FRONTEND URL
+    // =========================
+
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      "https://sattvivanaturals.com";
+
+    // =========================
+    // DIFFERENT LINK
+    // =========================
+
+    let reviewLink;
+
+    if (order.isGuestOrder) {
+
+      // Guest
+      reviewLink =
+        `${frontendUrl}/guest-review/${token}`;
+
+      console.log(
+        "GUEST REVIEW LINK:",
+        reviewLink
+      );
+
+    } else {
+
+      // Logged-in
+      reviewLink =
+        `${frontendUrl}/review/${token}`;
+
+      console.log(
+        "LOGGED-IN REVIEW LINK:",
+        reviewLink
+      );
+    }
+
+    // =========================
+    // CUSTOMER DETAILS
+    // =========================
+
+    const customerName =
+      order.shippingAddress.fullName;
+
+    const customerEmail =
+      order.shippingAddress.email;
+
+    // =========================
+    // PRODUCT LIST
+    // =========================
+
+    const productList = order.items
+      .map(
+        (item) =>
+          `${item.product?.title || item.product?.name || "Product"} x ${item.quantity}`
+      )
+      .join("\n");
+
+    // =========================
+    // EMAIL
+    // =========================
+
+    const emailSent = await sendEmail(
+      customerEmail,
+
+      "How was your SattViva purchase? ⭐",
+
+      `
+Hello ${customerName},
+
+We hope you are enjoying your SattViva Naturals products! 🌿
+
+Your order ${order.orderId} has been delivered.
+
+Products:
+${productList}
+
+We would love to hear about your experience.
+
+Please take a moment to share your feedback:
+
+${reviewLink}
+
+Your feedback helps us improve and also helps other customers make better choices.
+
+Thank you for choosing SattViva Naturals ❤️
+
+Regards,
+SattViva Naturals Team
+`
+    );
+
+    // =========================
+    // EMAIL STATUS
+    // =========================
+
+    if (emailSent) {
+
+      order.reviewEmailSentAt =
+        new Date();
+
+      await order.save();
+
+      console.log(
+        "✅ REVIEW EMAIL SENT:",
+        customerEmail
+      );
+
+    } else {
+
+      console.log(
+        "❌ REVIEW EMAIL FAILED:",
+        customerEmail
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "REVIEW EMAIL ERROR:",
+      error
+    );
+
+  }
 };
 
 export const createOrder = async (req, res) => {
@@ -983,15 +1281,38 @@ export const updateOrderStatus = async (
       });
     }
 
+    // Previous status save karna
+    const previousStatus = order.orderStatus;
+
+    // New status
     order.orderStatus = status;
 
     await order.save();
+
+    // =================================
+    // GUEST REVIEW EMAIL
+    // =================================
+
+ if (
+  status === "Delivered" &&
+  previousStatus !== "Delivered" &&
+  !order.reviewEmailSentAt
+) {
+  await sendReviewEmail(order);
+}
 
     res.status(200).json({
       success: true,
       order,
     });
+
   } catch (error) {
+
+    console.error(
+      "UPDATE ORDER STATUS ERROR:",
+      error
+    );
+
     res.status(500).json({
       success: false,
       message: error.message,

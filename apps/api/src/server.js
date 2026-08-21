@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 console.log(
-  "Cloud:",
+  "Cloud: ",
   process.env.CLOUDINARY_CLOUD_NAME
 );
 import express from "express";
@@ -21,6 +21,9 @@ import addressRoutes from "./routes/addressRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import reviewUploadRoutes from "./routes/reviewUploadRoutes.js";
+
+import guestReviewRoutes from "./routes/guestReviewRoutes.js";
 
 
 import { getShiprocketToken } from "./utils/shiprocket.js";
@@ -31,15 +34,15 @@ connectDB();
 
 const app = express();
 
-console.log(
-  "RAZORPAY_KEY_ID =",
-  process.env.RAZORPAY_KEY_ID
-);
+// console.log(
+//   "RAZORPAY_KEY_ID =",
+//   process.env.RAZORPAY_KEY_ID
+// );
 
-console.log(
-  "RAZORPAY_KEY_SECRET =",
-  process.env.RAZORPAY_KEY_SECRET
-);
+// console.log(
+//   "RAZORPAY_KEY_SECRET =",
+//   process.env.RAZORPAY_KEY_SECRET
+// );
 
 app.use(cors({
   origin: [
@@ -62,7 +65,9 @@ app.use("/api/addresses", addressRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/reviews", reviewRoutes);
-
+app.use("/api/review-upload", reviewUploadRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/guest-reviews", guestReviewRoutes);
 
 app.get("/", (req, res) => {
   res.json({

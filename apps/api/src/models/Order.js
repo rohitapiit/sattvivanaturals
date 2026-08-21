@@ -257,10 +257,43 @@ replaceStatus: {
 
     razorpayOrderId: String,
     razorpayPaymentId: String,
+
+
+reviewTokens: [
+  {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+
+    token: {
+      type: String,
+      required: true,
+    },
+
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+
+    used: {
+      type: Boolean,
+      default: false,
+    },
   },
+],
+
+reviewEmailSentAt: {
+  type: Date,
+  default: null,
+},
+
+
+  },
+
   {
     timestamps: true,
-  }
+  }  
 );
-
 export default mongoose.model("Order", orderSchema);

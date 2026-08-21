@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import ReviewDialog from "@/components/ReviewDialog";
 
 import {
   AlertDialog,
@@ -36,16 +37,19 @@ const [returnLoading, setReturnLoading] = useState(false);
 const [replaceLoading, setReplaceLoading] = useState(false);
 
 const [showReviewDialog, setShowReviewDialog] = useState(false);
+const [editingReview, setEditingReview] = useState(null);
 
 const [selectedProduct, setSelectedProduct] = useState(null);
 
 const [selectedOrder, setSelectedOrder] = useState(null);
 
-const [rating, setRating] = useState(5);
+const [rating, setRating] = useState(0);
 
 const [review, setReview] = useState("");
 
 const [reviewLoading, setReviewLoading] = useState(false);
+
+const [reviewImages, setReviewImages] = useState([]);
 
 
 
@@ -261,12 +265,84 @@ const [reviewLoading, setReviewLoading] = useState(false);
     }
   };
 
-  const submitReview = async () => {
+//   const submitReview = async () => {
+//   try {
+//     setReviewLoading(true);
+
+//     const token = localStorage.getItem("token");
+
+//     const response = await fetch(`${API}/reviews`, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: JSON.stringify({
+//         productId: selectedProduct._id,
+//         orderId: selectedOrder,
+//         rating,
+//         review,
+//       }),
+//     });
+
+//     const data = await response.json();
+
+//     if (data.success) {
+//       toast.success("Review Submitted");
+
+//       setShowReviewDialog(false);
+
+//       setReview("");
+
+//       setRating(5);
+//     } else {
+//       toast.error(data.message);
+//     }
+//   } catch (error) {
+//     console.error(error);
+
+//     toast.error("Something went wrong");
+//   } finally {
+//     setReviewLoading(false);
+//   }
+// };
+
+
+const submitReview = async () => {
   try {
     setReviewLoading(true);
 
     const token = localStorage.getItem("token");
 
+    // 1. Upload review images to Cloudinary
+    let imageUrls = [];
+
+    if (reviewImages.length > 0) {
+      const formData = new FormData();
+
+      reviewImages.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      const uploadResponse = await fetch(`${API}/review-upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const uploadData = await uploadResponse.json();
+
+      if (!uploadData.success) {
+        toast.error(uploadData.message || "Image upload failed");
+        return;
+      }
+
+      imageUrls = uploadData.imageUrls;
+    }
+
+    // 2. Submit review with image URLs
     const response = await fetch(`${API}/reviews`, {
       method: "POST",
       headers: {
@@ -278,6 +354,7 @@ const [reviewLoading, setReviewLoading] = useState(false);
         orderId: selectedOrder,
         rating,
         review,
+        images: imageUrls,
       }),
     });
 
@@ -288,20 +365,117 @@ const [reviewLoading, setReviewLoading] = useState(false);
 
       setShowReviewDialog(false);
 
+      // Reset form
       setReview("");
-
-      setRating(5);
+      setRating(0);
+      setReviewImages([]);
     } else {
       toast.error(data.message);
     }
   } catch (error) {
     console.error(error);
+    toast.error("Something went wrong");
+  } finally {
+    setReviewLoading(false);
+  }
+};
+
+
+const updateReview = async () => {
+  try {
+    setReviewLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    // New images only
+    const newFiles = reviewImages.filter(
+      (image) => image instanceof File
+    );
+
+    let newImageUrls = [];
+
+    // Upload newly added images
+    if (newFiles.length > 0) {
+      const formData = new FormData();
+
+      newFiles.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      const uploadResponse = await fetch(
+        `${API}/review-upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const uploadData = await uploadResponse.json();
+
+      if (!uploadData.success) {
+        toast.error(
+          uploadData.message || "Image upload failed"
+        );
+        return;
+      }
+
+      newImageUrls = uploadData.imageUrls || [];
+    }
+
+    // Existing Cloudinary URLs that user did not remove
+    const existingImageUrls = reviewImages.filter(
+      (image) => typeof image === "string"
+    );
+
+    const allImages = [
+      ...existingImageUrls,
+      ...newImageUrls,
+    ];
+
+    const response = await fetch(
+      `${API}/reviews/${editingReview._id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          rating,
+          review,
+          images: allImages,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      toast.success("Review updated successfully");
+
+      setShowReviewDialog(false);
+      setEditingReview(null);
+
+      setRating(0);
+      setReview("");
+      setReviewImages([]);
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    console.error("UPDATE REVIEW ERROR:", error);
 
     toast.error("Something went wrong");
   } finally {
     setReviewLoading(false);
   }
 };
+
+
+
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-6">
@@ -346,11 +520,18 @@ const [reviewLoading, setReviewLoading] = useState(false);
 
                   {order.orderStatus === "Delivered" && (
   <button
-    onClick={() => {
-      setSelectedProduct(item.product);
-      setSelectedOrder(order._id);
-      setShowReviewDialog(true);
-    }}
+onClick={() => {
+  setEditingReview(null);
+
+  setSelectedProduct(item.product);
+  setSelectedOrder(order._id);
+
+  setRating(0);
+  setReview("");
+  setReviewImages([]);
+
+  setShowReviewDialog(true);
+}}
     className="mt-3 border border-green-600 text-green-600 px-3 py-2 rounded-lg hover:bg-green-50"
   >
     ⭐ Add Review
@@ -638,78 +819,18 @@ const [reviewLoading, setReviewLoading] = useState(false);
     </AlertDialogFooter>
   </AlertDialogContent>
 </AlertDialog>
-<AlertDialog
+
+
+<ReviewDialog
   open={showReviewDialog}
   onOpenChange={setShowReviewDialog}
->
-  <AlertDialogContent className="max-w-md">
-    <AlertDialogHeader>
-      <AlertDialogTitle>
-        Write a Review
-      </AlertDialogTitle>
-
-      <AlertDialogDescription>
-        Share your experience with this product.
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-
-    {/* Rating */}
-    <div className="space-y-2">
-      <label className="font-medium">
-        Rating
-      </label>
-
-      <select
-        value={rating}
-        onChange={(e) =>
-          setRating(Number(e.target.value))
-        }
-        className="w-full border rounded-lg p-2"
-      >
-        <option value={5}>⭐⭐⭐⭐⭐ (5)</option>
-        <option value={4}>⭐⭐⭐⭐ (4)</option>
-        <option value={3}>⭐⭐⭐ (3)</option>
-        <option value={2}>⭐⭐ (2)</option>
-        <option value={1}>⭐ (1)</option>
-      </select>
-    </div>
-
-    {/* Review */}
-    <div className="space-y-2 mt-4">
-      <label className="font-medium">
-        Review
-      </label>
-
-      <textarea
-        rows={4}
-        value={review}
-        onChange={(e) =>
-          setReview(e.target.value)
-        }
-        placeholder="Write your review..."
-        className="w-full border rounded-lg p-3 resize-none"
-      />
-    </div>
-
-    <AlertDialogFooter className="mt-6">
-      <AlertDialogCancel>
-        Cancel
-      </AlertDialogCancel>
-
-      <AlertDialogAction
-        disabled={reviewLoading}
-        onClick={(e) => {
-          e.preventDefault();
-          submitReview();
-        }}
-      >
-        {reviewLoading
-          ? "Submitting..."
-          : "Submit Review"}
-      </AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
+  product={selectedProduct}
+  orderId={selectedOrder}
+  editingReview={editingReview}
+  onSuccess={() => {
+    setEditingReview(null);
+  }}
+/>
 
 {/* THIS IS YOUR MAIN PAGE CLOSING DIV */}
 </div>

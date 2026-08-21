@@ -25,6 +25,7 @@ import ContactPage from "@/pages/ContactPage";
 import ComingSoonPage from "@/pages/ComingSoonPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import MyReviewsPage from "@/pages/MyReviewsPage";
 
 
 
@@ -38,6 +39,7 @@ import SuccessPage from '@/pages/SuccessPage.jsx';
 import AdminContactPage from "./pages/AdminContactPage";
 
 import KnowYourFacilityPage from "./pages/KnowYourFacilityPage";
+import GuestReviewPage from "@/pages/GuestReviewPage";
 
 function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -80,9 +82,29 @@ function App() {
             <Route path="/addresses" element={<ProtectedRoute><MyAddressesPage /></ProtectedRoute>}/>
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}/>
             <Route path="/admin/coupons" element={<AdminRoute><AdminCouponsPage /></AdminRoute>}/>
-            <Route path="/store"element={<ProductCatalog />}/>
+            <Route path="/store" element={<ProductCatalog />}/>
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
+            <Route path="/my-reviews" element={<MyReviewsPage />}/>
+            {/* <Route path="/guest-review" element={<GuestReviewPage />}/> */}
+            <Route
+  path="/guest-review/:token"
+  element={<GuestReviewPage />}
+/>
+
+<Route
+  path="/review/:token"
+  element={<GuestReviewPage />}
+/>
+
+<Route
+  path="/review/:orderId/:productId"
+  element={
+    <ProtectedRoute>
+      <GuestReviewPage />
+    </ProtectedRoute>
+  }
+/>
 
 <Route
   path="/coming-soon"

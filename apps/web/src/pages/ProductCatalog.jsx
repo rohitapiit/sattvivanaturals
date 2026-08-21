@@ -3,6 +3,7 @@ import React, {useState, useMemo, useEffect} from "react";
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Star, Heart, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import ReactGA from "react-ga4";
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -249,6 +250,21 @@ await addToCart(
   defaultVariant?.stock ?? 0
 );
 
+// GA4 - Add to Cart event
+ReactGA.event("add_to_cart", {
+  currency: "INR",
+  value: defaultVariant?.price || product.price,
+  items: [
+    {
+      item_id: product._id,
+      item_name: product.title,
+      item_variant: defaultVariant?.size || "Default",
+      price: defaultVariant?.price || product.price,
+      quantity: 1,
+    },
+  ],
+});
+
 setAddedProductId(product._id);
 
 setTimeout(() => {
@@ -388,11 +404,19 @@ setTimeout(() => {
                   </div>
 
                   <div className="p-6 flex flex-col flex-grow">
-                    {/* <div className="flex items-center gap-1 mb-2 text-secondary">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="text-sm font-medium text-foreground">{product.rating}</span>
-                      <span className="text-sm text-muted-foreground">({product.reviews})</span>
-                    </div> */}
+               {product.reviews > 0 && (
+  <div className="flex items-center gap-1 mb-2 text-secondary">
+    <Star className="h-4 w-4 fill-current" />
+    
+    <span className="text-sm font-medium text-foreground">
+      {product.rating.toFixed(1)}
+    </span>
+
+    <span className="text-sm text-muted-foreground">
+      ({product.reviews} reviews)
+    </span>
+  </div>
+)}
                     <Link to={`/product/${product._id}`} className="block">
 
                     <h3 className="heading-font text-2xl font-bold text-foreground mb-2 leading-tight">
