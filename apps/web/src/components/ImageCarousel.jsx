@@ -71,7 +71,7 @@ const ImageCarousel = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       paginate(1);
-    }, 5000);
+    }, 5001);
 
     return () => clearInterval(timer);
   }, [paginate]);

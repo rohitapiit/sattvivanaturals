@@ -132,12 +132,52 @@ const [finalAmount, setFinalAmount] =
   useEffect(() => {
     const subtotal = checkoutItems.reduce(
       (sum, item) =>
-        sum + item.product.price * item.quantity,
+        sum +
+        (item.variant?.price ?? item.product.price) *
+          item.quantity,
       0
     );
   
-    setFinalAmount(subtotal - discount);
-  }, [checkoutItems, discount]);
+    // No coupon applied
+    if (!appliedCoupon) {
+      setDiscount(0);
+      setFinalAmount(subtotal);
+      return;
+    }
+  
+    // Find the currently applied coupon
+    const coupon = visibleCoupons.find(
+      (item) =>
+        item.code.toUpperCase() ===
+        appliedCoupon.toUpperCase()
+    );
+  
+    // Coupon no longer exists
+    if (!coupon) {
+      setDiscount(0);
+      setFinalAmount(subtotal);
+      return;
+    }
+  
+    let newDiscount = 0;
+  
+    if (coupon.discountType === "percentage") {
+      newDiscount =
+        (subtotal * Number(coupon.discountValue)) / 100;
+    } else {
+      newDiscount = Number(coupon.discountValue);
+    }
+  
+    // Never allow discount to exceed subtotal
+    newDiscount = Math.min(newDiscount, subtotal);
+  
+    setDiscount(newDiscount);
+    setFinalAmount(subtotal - newDiscount);
+  }, [
+    checkoutItems,
+    appliedCoupon,
+    visibleCoupons,
+  ]);
 
 useEffect(() => {
   const handleStorageChange = () => {
@@ -483,12 +523,12 @@ const applyCoupon = async () => {
 
   try {
     const total = checkoutItems.reduce(
-
-  (sum, item) =>
-    sum +
-    item.product.price * item.quantity,
-  0
-);
+      (sum, item) =>
+        sum +
+        (item.variant?.price ?? item.product.price) *
+          item.quantity,
+      0
+    );
 
     const response = await fetch(
       `${API}/coupons/apply`,
@@ -543,15 +583,6 @@ console.log("Final Amount:", data.finalAmount);
   const removeCoupon = () => {
     setCouponCode("");
     setAppliedCoupon(null);
-    setDiscount(0);
-
-    const subtotal = checkoutItems.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0
-    );
-
-    setFinalAmount(subtotal);
-
     setPaymentMethod("COD");
   };
 
@@ -564,20 +595,12 @@ console.log("Final Amount:", data.finalAmount);
   // discount too, unless the new value still matches the applied code.
   const handleCouponCodeChange = (newValue) => {
     setCouponCode(newValue);
-
+  
     const trimmed = newValue.trim();
-
+  
     if (appliedCoupon && appliedCoupon !== trimmed) {
       setAppliedCoupon(null);
-      setDiscount(0);
       setPaymentMethod("COD");
-
-      const subtotal = checkoutItems.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
-        0
-      );
-
-      setFinalAmount(subtotal);
     }
   };
 
@@ -1552,7 +1575,7 @@ className="border rounded-lg p-3 bg-gray-100"
         checkoutItems.reduce(
           (sum, item) =>
             sum +
-            item.product.price *
+            (item.variant?.price ?? item.product.price) *
               item.quantity,
           0
         )
