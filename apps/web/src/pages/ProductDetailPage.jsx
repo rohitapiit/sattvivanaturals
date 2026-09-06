@@ -317,53 +317,6 @@ function ProductDetailPage() {
             product.price,
         };
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        // ------------------------------
-        // SYNC SERVER CART
-        // ------------------------------
-
-        if (token) {
-          const response =
-            await fetch(
-              `${API}/cart/add`,
-              {
-                method: "POST",
-
-                headers: {
-                  "Content-Type":
-                    "application/json",
-
-                  Authorization:
-                    `Bearer ${token}`,
-                },
-
-                body: JSON.stringify({
-                  productId:
-                    product._id,
-
-                  quantity,
-
-                  size:
-                    activeVariant?.size,
-                }),
-              }
-            );
-
-          const data =
-            await response.json();
-
-          if (!data.success) {
-            throw new Error(
-              data.message ||
-                "Unable to add product to cart"
-            );
-          }
-        }
-
         // ------------------------------
         // FORMAT VARIANT
         // ------------------------------
