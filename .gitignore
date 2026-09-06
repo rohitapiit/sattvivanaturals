@@ -1,0 +1,14 @@
+node_modules/
+.env
+dist/
+build/
+coverage/
+
+apps/api/node_modules/
+apps/web/node_modules/
+
+.vscode/
+
+# macOS
+.DS_Storeapps/web/public/videos/facility.mp4
+apps/web/public/videos/facility.mp4
