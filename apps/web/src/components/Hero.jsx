@@ -271,11 +271,6 @@ const Hero = () => {
           className="
             relative
             w-full
-            h-[220px]
-            sm:h-[280px]
-            md:h-[360px]
-            lg:h-[400px]
-            xl:h-[420px]
           "
         >
           {loadingBanners ? (
@@ -322,12 +317,8 @@ const Hero = () => {
               className="
                 relative
                 w-full
-                h-full
                 overflow-hidden
-                rounded-[20px]
                 cursor-pointer
-                bg-[#173c2b]
-                shadow-[0_10px_28px_rgba(35,40,32,0.12)]
                 group
               "
             >
@@ -341,11 +332,9 @@ const Hero = () => {
                   }
                   initial={{
                     opacity: 0,
-                    scale: 1.01,
                   }}
                   animate={{
                     opacity: 1,
-                    scale: 1,
                   }}
                   exit={{
                     opacity: 0,
@@ -356,7 +345,7 @@ const Hero = () => {
                   className="
                     block
                     w-full
-                    h-full
+                    h-auto
                   "
                 >
                   {activeBanner?.mobileImage && (
@@ -377,31 +366,15 @@ const Hero = () => {
                       currentBanner + 1
                     }`}
                     className="
+                      block
                       w-full
-                      h-full
-                      object-cover
+                      h-auto
+                      object-contain
                       object-center
-                      transition-transform
-                      duration-700
-                      group-hover:scale-[1.01]
                     "
                   />
                 </motion.picture>
               </AnimatePresence>
-
-              {/* BORDER */}
-
-              <div
-                className="
-                  absolute
-                  inset-[1px]
-                  z-30
-                  rounded-[19px]
-                  border
-                  border-white/25
-                  pointer-events-none
-                "
-              />
 
               {/* SHOP COLLECTION */}
 
@@ -951,13 +924,13 @@ const Hero = () => {
                           </div>
                         </div>
 
-                        {/* SHOP NOW BUTTON */}
+                        {/* BUY NOW BUTTON */}
 
                         <button
                           type="button"
                           onClick={() =>
                             navigate(
-                              "/products"
+                              `/product/${product._id}`
                             )
                           }
                           className="
@@ -993,7 +966,7 @@ const Hero = () => {
                           />
 
                           <span>
-                            Shop Now
+                            Buy Now
                           </span>
 
                           <ArrowRight

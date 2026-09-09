@@ -334,6 +334,14 @@ const CheckoutPage = () => {
     setAppliedCoupon,
   ] = useState(null);
 
+  // Keep the coupon returned by the API so hidden coupons are also usable.
+  // Do not derive the applied discount from visibleCoupons: hidden coupons are
+  // intentionally excluded from GET /coupons.
+  const [
+    appliedCouponData,
+    setAppliedCouponData,
+  ] = useState(null);
+
   const [
     discount,
     setDiscount,
@@ -562,54 +570,42 @@ const CheckoutPage = () => {
   // =====================================================
 
   useEffect(() => {
-    if (!appliedCoupon) {
+    if (!appliedCoupon || !appliedCouponData) {
       setDiscount(0);
       setFinalAmount(subtotal);
       return;
     }
 
-    const coupon =
-      visibleCoupons.find(
-        (item) =>
-          item.code.toUpperCase() ===
-          appliedCoupon.toUpperCase()
-      );
+    // Recalculate from the coupon returned by /coupons/apply. This works for
+    // both visible and hidden coupons and also updates correctly if the cart
+    // subtotal changes after the coupon is applied.
+    const value = Number(
+      appliedCouponData.discountValue
+    );
 
-    if (!coupon) {
+    if (!Number.isFinite(value) || value < 0) {
       setDiscount(0);
       setFinalAmount(subtotal);
       return;
     }
 
-    let newDiscount = 0;
-
-    if (
-      coupon.discountType ===
+    let newDiscount =
+      appliedCouponData.discountType ===
       "percentage"
-    ) {
-      newDiscount =
-        (subtotal *
-          Number(coupon.discountValue)) /
-        100;
-    } else {
-      newDiscount =
-        Number(coupon.discountValue);
-    }
+        ? (subtotal * value) / 100
+        : value;
 
-    newDiscount = Math.min(
-      newDiscount,
-      subtotal
+    newDiscount = Math.max(
+      0,
+      Math.min(newDiscount, subtotal)
     );
 
     setDiscount(newDiscount);
-
-    setFinalAmount(
-      subtotal - newDiscount
-    );
+    setFinalAmount(subtotal - newDiscount);
   }, [
     subtotal,
     appliedCoupon,
-    visibleCoupons,
+    appliedCouponData,
   ]);
 
   // =====================================================
@@ -814,6 +810,7 @@ const CheckoutPage = () => {
         value.trim().toUpperCase()
     ) {
       setAppliedCoupon(null);
+      setAppliedCouponData(null);
       setDiscount(0);
       setFinalAmount(subtotal);
     }
@@ -867,6 +864,7 @@ const CheckoutPage = () => {
 
       setCouponCode(trimmedCode);
       setAppliedCoupon(trimmedCode);
+      setAppliedCouponData(data.coupon || null);
 
       setDiscount(
         Number(data.discount) || 0
@@ -898,6 +896,7 @@ const CheckoutPage = () => {
   const removeCoupon = () => {
     setCouponCode("");
     setAppliedCoupon(null);
+    setAppliedCouponData(null);
     setDiscount(0);
     setFinalAmount(subtotal);
   };

@@ -1,6 +1,7 @@
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import Coupon from "../models/Coupon.js";
 import User from "../models/User.js";
 import sendEmail from "../utils/sendEmail.js";
 import razorpay from "../config/razorpay.js";
@@ -613,9 +614,55 @@ await product.save();
 
 }
 
-  if (typeof finalAmount === "number") {
-      totalAmount = finalAmount;
+  // Revalidate the coupon on the server. Never trust the discount/finalAmount
+  // supplied by the browser because the client can be modified.
+  let appliedDiscount = 0;
+
+  if (couponCode) {
+    const normalizedCouponCode = String(couponCode)
+      .trim()
+      .toUpperCase();
+
+    const coupon = await Coupon.findOne({
+      code: normalizedCouponCode,
+      isActive: true,
+    });
+
+    if (!coupon) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid coupon",
+      });
     }
+
+    if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "This coupon has expired",
+      });
+    }
+
+    const minimumAmount = Number(coupon.minimumAmount) || 0;
+    if (totalAmount < minimumAmount) {
+      return res.status(400).json({
+        success: false,
+        message: `Minimum order amount is ₹${minimumAmount}`,
+      });
+    }
+
+    const discountValue = Number(coupon.discountValue);
+    appliedDiscount =
+      coupon.discountType === "percentage"
+        ? (totalAmount * discountValue) / 100
+        : discountValue;
+
+    appliedDiscount = Math.max(
+      0,
+      Math.min(appliedDiscount, totalAmount)
+    );
+
+    totalAmount -= appliedDiscount;
+  }
 
 const counter = await Counter.findByIdAndUpdate(
   "order",

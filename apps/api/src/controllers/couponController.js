@@ -42,18 +42,31 @@ export const getVisibleCoupons =
     }
   };
 
-  export const applyCoupon = async (
-  req,
-  res
-) => {
+export const applyCoupon = async (req, res) => {
   try {
-    const { code, amount} = req.body;
+    const code = String(req.body?.code || "")
+      .trim()
+      .toUpperCase();
+    const amount = Number(req.body?.amount);
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a coupon code",
+      });
+    }
+
+    if (!Number.isFinite(amount) || amount < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order amount",
+      });
+    }
 
     const coupon = await Coupon.findOne({
-      code: code.toUpperCase(),
+      code,
       isActive: true,
     });
-
 
     if (!coupon) {
       return res.status(400).json({
@@ -62,34 +75,42 @@ export const getVisibleCoupons =
       });
     }
 
-    if (amount < coupon.minimumAmount) {
+    if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
       return res.status(400).json({
         success: false,
-        message:
-          `Minimum order amount is ₹${coupon.minimumAmount}`,
+        message: "This coupon has expired",
       });
     }
 
-    let discount = 0;
+    const minimumAmount = Number(coupon.minimumAmount) || 0;
 
-    if (
-      coupon.discountType ===
-      "percentage"
-    ) {
-      discount =
-        (amount *
-          coupon.discountValue) /
-        100;
-    } else {
-      discount =
-        coupon.discountValue;
+    if (amount < minimumAmount) {
+      return res.status(400).json({
+        success: false,
+        message: `Minimum order amount is ₹${minimumAmount}`,
+      });
     }
+
+    const discountValue = Number(coupon.discountValue);
+
+    if (!Number.isFinite(discountValue) || discountValue < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Coupon has an invalid discount value",
+      });
+    }
+
+    let discount =
+      coupon.discountType === "percentage"
+        ? (amount * discountValue) / 100
+        : discountValue;
+
+    discount = Math.max(0, Math.min(discount, amount));
 
     res.status(200).json({
       success: true,
       discount,
-      finalAmount:
-        amount - discount,
+      finalAmount: amount - discount,
       coupon,
     });
   } catch (error) {
