@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "DM Sans", sans-serif;
+  overflow-x: hidden;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  :root {
+    /* Custom Brand Tokens */
+    --forest-green: 15 54% 19%;
+    --cream: 40 67% 96%;
+    --matte-gold: 40 60% 60%;
+    --warm-brown: 20 50% 26%;
+    --olive: 65 25% 36%;
+
+    /* Semantic Mapping */
+    --background: var(--cream);
+    --foreground: var(--warm-brown);
+    
+    --primary: var(--forest-green);
+    --primary-foreground: var(--cream);
+    
+    --secondary: var(--matte-gold);
+    --secondary-foreground: var(--forest-green);
+    
+    --muted: 40 30% 90%;
+    --muted-foreground: var(--olive);
+    
+    --accent: var(--olive);
+    --accent-foreground: var(--cream);
+    
+    --card: 0 0% 100%;
+    --card-foreground: var(--warm-brown);
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--warm-brown);
+    
+    --border: 40 20% 85%;
+    --input: 40 20% 85%;
+    --ring: var(--matte-gold);
+    
+    --radius: 0.75rem;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+  }
+  
+  .dark {
+    --background: var(--forest-green);
+    --foreground: var(--cream);
+    
+    --primary: var(--matte-gold);
+    --primary-foreground: var(--forest-green);
+    
+    --secondary: var(--olive);
+    --secondary-foreground: var(--cream);
+    
+    --muted: 15 40% 15%;
+    --muted-foreground: 40 30% 70%;
+    
+    --accent: var(--warm-brown);
+    --accent-foreground: var(--cream);
+    
+    --card: 15 50% 12%;
+    --card-foreground: var(--cream);
+    
+    --popover: 15 50% 12%;
+    --popover-foreground: var(--cream);
+    
+    --border: 15 40% 25%;
+    --input: 15 40% 25%;
+    --ring: var(--matte-gold);
+  }
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@layer components {
+  .heading-font {
+    font-family: "Playfair Display", serif;
+    letter-spacing: 0.02em;
+  }
+  
+  .body-font {
+    font-family: "DM Sans", sans-serif;
+  }
+  
+  .premium-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .premium-card:hover {
+    box-shadow: 0 20px 40px -12px hsl(var(--secondary) / 0.15);
+    transform: translateY(-4px);
+  }
+  
+  .gold-glow {
+    transition: all 0.3s ease;
+  }
+  
+  .gold-glow:hover {
+    box-shadow: 0 0 20px hsl(var(--secondary) / 0.4);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 25s linear infinite;
+  }
+  
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+}
