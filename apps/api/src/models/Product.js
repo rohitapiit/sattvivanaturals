@@ -26,6 +26,13 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Optional crossed/MRP-style price shown on the storefront.
+    // The actual selling price remains `price`.
+    cutPrice: {
+      type: Number,
+      default: null,
+    },
+
     stock: {
       type: Number,
       default: 0,
@@ -43,6 +50,11 @@ variants: [
     },
 
    price: {
+  type: Number,
+  default: null,
+},
+
+cutPrice: {
   type: Number,
   default: null,
 },

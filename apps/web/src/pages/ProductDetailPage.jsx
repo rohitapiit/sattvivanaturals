@@ -619,8 +619,15 @@ function ProductDetailPage() {
       0
     }`;
 
-  const originalPrice =
-    selectedVariant?.price_formatted;
+  const cutPrice =
+    selectedVariant?.cutPrice ??
+    product.cutPrice ??
+    null;
+
+  const hasCutPrice =
+    cutPrice !== null &&
+    cutPrice !== undefined &&
+    Number(cutPrice) > Number(selectedVariant?.price ?? product.price ?? 0);
 
   const availableStock =
     selectedVariant?.stock ??
@@ -1236,33 +1243,29 @@ function ProductDetailPage() {
                 flex-wrap
               "
             >
+              {hasCutPrice && (
+                <span
+                  className="
+                    text-xl
+                    sm:text-2xl
+                    text-gray-400
+                    line-through
+                  "
+                >
+                  ₹{Number(cutPrice).toLocaleString("en-IN")}
+                </span>
+              )}
+
               <span
                 className="
                   text-3xl
                   sm:text-4xl
-
                   font-bold
-
                   text-secondary
                 "
               >
                 {price}
               </span>
-
-              {selectedVariant?.sale_price_in_cents && (
-                <span
-                  className="
-                    text-xl
-                    sm:text-2xl
-
-                    text-gray-400
-
-                    line-through
-                  "
-                >
-                  {originalPrice}
-                </span>
-              )}
             </div>
 
             {/* QUANTITY */}

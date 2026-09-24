@@ -16,10 +16,26 @@ const normalizeProductData = (body = {}) => {
         variant.stock !== undefined
     );
 
-    data.variants = validVariants;
+    data.variants = validVariants.map((variant) => ({
+      ...variant,
+      price: Number(variant.price),
+      stock: Number(variant.stock || 0),
+      cutPrice:
+        variant.cutPrice === "" ||
+        variant.cutPrice === null ||
+        variant.cutPrice === undefined
+          ? null
+          : Number(variant.cutPrice),
+    }));
 
-    if (validVariants.length > 0) {
-      data.price = Number(validVariants[0].price);
+    if (data.variants.length > 0) {
+      data.price = Number(data.variants[0].price);
+      data.cutPrice =
+        validVariants[0].cutPrice === "" ||
+        validVariants[0].cutPrice === null ||
+        validVariants[0].cutPrice === undefined
+          ? null
+          : Number(validVariants[0].cutPrice);
       data.stock = validVariants.reduce(
         (total, variant) => total + Number(variant.stock || 0),
         0
@@ -28,6 +44,12 @@ const normalizeProductData = (body = {}) => {
         data.sku = validVariants[0].sku;
       }
     }
+  }
+
+  if (data.cutPrice === "" || data.cutPrice === null || data.cutPrice === undefined) {
+    data.cutPrice = null;
+  } else {
+    data.cutPrice = Number(data.cutPrice);
   }
 
   return data;

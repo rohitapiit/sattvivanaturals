@@ -14,11 +14,13 @@ const AdminProductsPage = () => {
   category: "",
   subcategory: "",
   price: "",
+  cutPrice: "",
   stock: "",
   variants: [
   {
     size: "",
     price: "",
+    cutPrice: "",
     stock: "",
   },
 ],
@@ -88,11 +90,13 @@ const [uploading, setUploading] = useState(false);
     category: "",
     subcategory: "",
     price: "",
+    cutPrice: "",
     stock: "",
     variants: [
       {
         size: "",
         price: "",
+        cutPrice: "",
         stock: "",
       },
     ],
@@ -148,6 +152,10 @@ const [uploading, setUploading] = useState(false);
         .map((item) => ({
           ...item,
           price: Number(item.price),
+          cutPrice:
+            item.cutPrice === "" || item.cutPrice === null || item.cutPrice === undefined
+              ? null
+              : Number(item.cutPrice),
           stock: Number(item.stock),
         }));
 
@@ -158,12 +166,17 @@ const [uploading, setUploading] = useState(false);
 
       if (variants.length > 0) {
         productData.price = variants[0].price;
+        productData.cutPrice = variants[0].cutPrice;
         productData.stock = variants.reduce(
           (total, variant) => total + variant.stock,
           0
         );
       } else {
         productData.price = Number(formData.price || 0);
+        productData.cutPrice =
+          formData.cutPrice === "" || formData.cutPrice === null
+            ? null
+            : Number(formData.cutPrice);
         productData.stock = Number(formData.stock || 0);
       }
 
@@ -215,12 +228,14 @@ const [uploading, setUploading] = useState(false);
       category: product.category || "",
       subcategory: product.subcategory || "",
       price: product.price ?? "",
+      cutPrice: product.cutPrice ?? "",
       stock: product.stock ?? "",
       variants:
         Array.isArray(product.variants) && product.variants.length > 0
           ? product.variants.map((variant) => ({
               size: variant.size || "",
               price: variant.price ?? "",
+              cutPrice: variant.cutPrice ?? "",
               stock: variant.stock ?? "",
               ...(variant.sku ? { sku: variant.sku } : {}),
             }))
@@ -228,6 +243,7 @@ const [uploading, setUploading] = useState(false);
               {
                 size: "",
                 price: product.price ?? "",
+                cutPrice: product.cutPrice ?? "",
                 stock: product.stock ?? "",
               },
             ],
@@ -487,7 +503,7 @@ const uploadUseImage = async (file, index) => {
 {formData.variants.map((variant, index) => (
   <div
     key={index}
-    className="grid grid-cols-4 gap-3 mb-3"
+    className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3"
   >
     <select
       value={variant.size}
@@ -517,11 +533,28 @@ const uploadUseImage = async (file, index) => {
 
     <input
       type="number"
-      placeholder="Price"
+      placeholder="Original Price"
       value={variant.price}
       onChange={(e) => {
         const updated = [...formData.variants];
         updated[index].price = e.target.value;
+        setFormData({
+          ...formData,
+          variants: updated,
+        });
+      }}
+      className="border p-2 rounded"
+    />
+
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      placeholder="Cut Price"
+      value={variant.cutPrice ?? ""}
+      onChange={(e) => {
+        const updated = [...formData.variants];
+        updated[index].cutPrice = e.target.value;
         setFormData({
           ...formData,
           variants: updated,
@@ -562,6 +595,7 @@ const uploadUseImage = async (file, index) => {
                   {
                     size: "",
                     price: "",
+                    cutPrice: "",
                     stock: "",
                   },
                 ],
@@ -584,6 +618,7 @@ const uploadUseImage = async (file, index) => {
         {
           size: "",
           price: "",
+          cutPrice: "",
           stock: "",
         },
       ],
@@ -832,6 +867,18 @@ use.image && (
   {product.variants?.length
     ? product.variants[0].price
     : product.price}
+  {(product.variants?.length
+    ? product.variants[0].cutPrice
+    : product.cutPrice) ? (
+      <>
+        {" "}
+        <span className="line-through text-gray-400">
+          ₹{product.variants?.length
+            ? product.variants[0].cutPrice
+            : product.cutPrice}
+        </span>
+      </>
+    ) : null}
 </p>
 
             <p>
