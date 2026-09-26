@@ -1,4 +1,5 @@
 import Cart from "../models/Cart.js";
+import AbandonedCart from "../models/AbandonedCart.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import Coupon from "../models/Coupon.js";
@@ -1055,6 +1056,26 @@ Discount: ₹${order.discount || 0}
 Total Paid: ₹${order.totalAmount}
 `
 );
+
+ // Mark the customer's open cart snapshot as recovered before clearing
+ // the live cart. This keeps the admin abandonment history accurate.
+ if (userId && cart) {
+   await AbandonedCart.updateMany(
+     {
+       user: userId,
+       status: { $in: ["active", "abandoned"] },
+       "items.0": { $exists: true },
+     },
+     {
+       $set: {
+         status: "recovered",
+         recoveredOrder: order._id,
+         recoveredAt: new Date(),
+         lastActivityAt: new Date(),
+       },
+     }
+   );
+ }
 
  console.log("Before clearing cart");
 

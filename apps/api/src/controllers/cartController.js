@@ -1,4 +1,71 @@
 import Cart from "../models/Cart.js";
+import AbandonedCart from "../models/AbandonedCart.js";
+
+
+
+// =====================================================
+// ABANDONED CART TRACKING
+// =====================================================
+// We only track authenticated customers because the admin dashboard
+// needs a reliable customer identity. Guest carts remain browser-only.
+export const syncAbandonedCart = async (userId) => {
+  if (!userId) return;
+
+  const cart = await Cart.findOne({ user: userId }).populate(
+    "items.product"
+  );
+
+  const validItems = (cart?.items || []).filter(
+    (item) => item.product
+  );
+
+  const existing = await AbandonedCart.findOne({
+    user: userId,
+    status: { $in: ["active", "abandoned"] },
+  });
+
+  if (!validItems.length) {
+    if (existing) {
+      existing.items = [];
+      existing.totalAmount = 0;
+      existing.status = "cleared";
+      existing.lastActivityAt = new Date();
+      await existing.save();
+    }
+    return;
+  }
+
+  const items = validItems.map((item) => ({
+    product: item.product._id,
+    quantity: item.quantity,
+    price: Number(item.product.price) || 0,
+  }));
+
+  const totalAmount = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  if (existing) {
+    existing.items = items;
+    existing.totalAmount = totalAmount;
+    existing.lastActivityAt = new Date();
+    existing.status = "active";
+    existing.recoveredOrder = null;
+    existing.recoveredAt = null;
+    await existing.save();
+    return existing;
+  }
+
+  return AbandonedCart.create({
+    user: userId,
+    items,
+    totalAmount,
+    firstAddedAt: new Date(),
+    lastActivityAt: new Date(),
+    status: "active",
+  });
+};
 
 export const addToCart = async (req, res) => {
   try {
@@ -35,6 +102,8 @@ export const addToCart = async (req, res) => {
 
       await cart.save();
     }
+
+    await syncAbandonedCart(req.user.userId);
 
     res.status(200).json({
       success: true,
@@ -109,6 +178,7 @@ export const updateCartItem = async (req, res) => {
     item.quantity = quantity;
 
     await cart.save();
+    await syncAbandonedCart(req.user.userId);
 
     res.status(200).json({
       success: true,
@@ -143,6 +213,7 @@ export const removeFromCart = async (req, res) => {
     );
 
     await cart.save();
+    await syncAbandonedCart(req.user.userId);
 
     res.status(200).json({
       success: true,

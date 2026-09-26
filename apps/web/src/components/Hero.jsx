@@ -605,16 +605,22 @@ const Hero = () => {
             ) : (
               <div
                 className="
-                  grid
-                  grid-cols-1
-                  sm:grid-cols-2
-                  lg:grid-cols-3
-                  xl:grid-cols-4
+                  flex
                   gap-3
                   md:gap-4
+                  overflow-x-auto
+                  overflow-y-hidden
+                  pb-3
+                  -mx-1
+                  px-1
+                  snap-x
+                  snap-mandatory
+                  touch-pan-x
+                  overscroll-x-contain
+                  [scrollbar-width:none]
+                  [&::-webkit-scrollbar]:hidden
                 "
               >
-
                 {products.map((product) => {
                   const productImage =
                     product.images?.[0];
@@ -632,7 +638,7 @@ const Hero = () => {
                       key={product._id}
                       className="
                         group/product
-                        min-w-0
+                        flex-none w-[82vw] sm:w-[48vw] md:w-[32vw] lg:w-[24vw] xl:w-[23vw] max-w-[310px] snap-start 
                         rounded-[18px]
                         bg-[#fffdf9]
                         border

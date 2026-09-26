@@ -13,12 +13,20 @@ import {
   Facebook,
   Youtube,
   MessageCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = () => {
   const location = useLocation();
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  })();
 
   // ==========================================
   // SHOP DROPDOWN STATE
@@ -62,6 +70,14 @@ const Sidebar = () => {
       icon: Phone,
     },
   ];
+
+  if (currentUser?.role === "admin") {
+    navItems.push({
+      name: "Abandoned Carts",
+      path: "/admin/abandoned-carts",
+      icon: AlertTriangle,
+    });
+  }
 
   // ==========================================
   // SOCIAL LINKS

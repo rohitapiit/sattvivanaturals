@@ -19,6 +19,7 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import reviewUploadRoutes from "./routes/reviewUploadRoutes.js";
 import bannerRoutes from "./routes/bannerRoutes.js";
 import guestReviewRoutes from "./routes/guestReviewRoutes.js";
+import abandonedCartRoutes from "./routes/abandonedCartRoutes.js";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5001;
@@ -52,6 +53,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/review-upload", reviewUploadRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/guest-reviews", guestReviewRoutes);
+app.use("/api/abandoned-carts", abandonedCartRoutes);
 
 app.get("/", (req, res) => {
   res.json({ success: true, message: "SattViva API Running" });

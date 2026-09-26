@@ -48,6 +48,7 @@ import AdminContactPage from "./pages/AdminContactPage";
 import KnowYourFacilityPage from "./pages/KnowYourFacilityPage";
 import GuestReviewPage from "@/pages/GuestReviewPage";
 import BannerManagementPage from "@/pages/BannerManagementPage";
+import AbandonedCartsPage from "@/pages/AbandonedCartsPage.jsx";
 
 // ==========================================
 // APP CONTENT
@@ -318,6 +319,15 @@ function AppContent() {
               element={
                 <AdminRoute>
                   <AdminOrdersPage />
+                </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/admin/abandoned-carts"
+              element={
+                <AdminRoute>
+                  <AbandonedCartsPage />
                 </AdminRoute>
               }
             />
