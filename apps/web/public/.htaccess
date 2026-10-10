@@ -2,6 +2,10 @@
 RewriteEngine On
 RewriteBase /
 
+# Permanently redirect the old bottle page to the facility page
+RewriteRule ^know-your-bottle/?$ https://sattvivanaturals.com/know-your-facility [R=301,L,NE]
+
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
