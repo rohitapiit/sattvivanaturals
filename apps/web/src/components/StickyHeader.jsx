@@ -67,6 +67,8 @@ const StickyHeader = ({ onCartOpen }) => {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] =
     useState(false);
+  const [products, setProducts] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const dropdownRef = useRef(null);
 
@@ -79,50 +81,42 @@ const StickyHeader = ({ onCartOpen }) => {
     0
   );
 
-  const products = [
-    {
-      id: 1,
-      name: "Wood Pressed Mustard Oil",
-      url: "/products/wood-press-oil",
-    },
-    {
-      id: 2,
-      name: "Cold Pressed Groundnut Oil",
-      url: "/products/cold-press-oil",
-    },
-    {
-      id: 3,
-      name: "Cold Pressed Coconut Oil",
-      url: "/products/cold-press-oil",
-    },
-    {
-      id: 4,
-      name: "Wood Pressed Sesame Oil",
-      url: "/products/wood-press-oil",
-    },
-    {
-      id: 5,
-      name: "Turmeric Powder",
-      url: "/products/spices",
-    },
-    {
-      id: 6,
-      name: "Black Pepper",
-      url: "/products/spices",
-    },
-    {
-      id: 7,
-      name: "Dry Fruits",
-      url: "/products/dry-fruits",
-    },
-  ];
+  const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
-  const filteredProducts =
-    products.filter((product) =>
-      product.name
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
+  // Search the current database instead of a fixed client-side product list.
+  useEffect(() => {
+    const query = search.trim();
+    if (!query) {
+      setProducts([]);
+      setIsSearching(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      try {
+        setIsSearching(true);
+        const response = await fetch(
+          `${API}/products?search=${encodeURIComponent(query)}`,
+          { signal: controller.signal }
+        );
+        const data = await response.json();
+        setProducts(data.success ? data.products.filter((product) => product.isActive !== false) : []);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("PRODUCT SEARCH ERROR:", error);
+          setProducts([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [search]);
 
   useEffect(() => {
     const handleClickOutside = (
@@ -160,9 +154,10 @@ const StickyHeader = ({ onCartOpen }) => {
     navigate("/");
   };
 
-  const handleProductClick = (url) => {
-    navigate(url);
+  const handleProductClick = (productId) => {
+    navigate(`/product/${productId}`);
     setSearch("");
+    setShowDropdown(false);
   };
 
   return (
@@ -235,16 +230,18 @@ const StickyHeader = ({ onCartOpen }) => {
                   overflow-hidden
                 "
               >
-                {filteredProducts.length >
+                {isSearching ? (
+                  <div className="px-4 py-4 text-sm text-muted-foreground">Searching products...</div>
+                ) : products.length >
                 0 ? (
-                  filteredProducts.map(
+                  products.map(
                     (product) => (
                       <button
-                        key={product.id}
+                        key={product._id}
                         type="button"
                         onClick={() =>
                           handleProductClick(
-                            product.url
+                            product._id
                           )
                         }
                         className="
@@ -265,7 +262,7 @@ const StickyHeader = ({ onCartOpen }) => {
                           />
 
                           <span className="text-sm font-medium">
-                            {product.name}
+                            {product.title}
                           </span>
                         </div>
                       </button>
@@ -412,16 +409,18 @@ const StickyHeader = ({ onCartOpen }) => {
                   overflow-hidden
                 "
               >
-                {filteredProducts.length >
+                {isSearching ? (
+                  <div className="p-4 text-sm text-muted-foreground">Searching products...</div>
+                ) : products.length >
                 0 ? (
-                  filteredProducts.map(
+                  products.map(
                     (product) => (
                       <button
-                        key={product.id}
+                        key={product._id}
                         type="button"
                         onClick={() =>
                           handleProductClick(
-                            product.url
+                            product._id
                           )
                         }
                         className="
@@ -434,7 +433,7 @@ const StickyHeader = ({ onCartOpen }) => {
                           last:border-b-0
                         "
                       >
-                        {product.name}
+                        {product.title}
                       </button>
                     )
                   )

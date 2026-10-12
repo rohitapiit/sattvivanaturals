@@ -83,7 +83,20 @@ export const createProduct = async (req, res) => {
 
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().lean();
+    const search = req.query.search?.trim();
+    const searchFilter = search
+      ? {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+            { category: { $regex: search, $options: "i" } },
+            { subcategory: { $regex: search, $options: "i" } },
+            { "variants.size": { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const products = await Product.find(searchFilter).lean();
 
     const userReviewStats = await Review.aggregate([
       {

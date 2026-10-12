@@ -1,12 +1,94 @@
 import React, { useEffect, useState } from "react";
 const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
+const CropImageDialog = ({ image, onCancel, onSave }) => {
+  const [crop, setCrop] = useState({ x: 10, y: 10, width: 80, height: 80 });
+  const [saving, setSaving] = useState(false);
+
+  const updateCrop = (field, value) => {
+    const nextValue = Math.max(0, Math.min(100, Number(value)));
+    setCrop((current) => {
+      const next = { ...current, [field]: nextValue };
+      if (field === "x") next.width = Math.min(next.width, 100 - next.x);
+      if (field === "y") next.height = Math.min(next.height, 100 - next.y);
+      if (field === "width") next.width = Math.min(next.width, 100 - next.x);
+      if (field === "height") next.height = Math.min(next.height, 100 - next.y);
+      return next;
+    });
+  };
+
+  const createCrop = async () => {
+    setSaving(true);
+    try {
+      const source = new Image();
+      source.crossOrigin = "anonymous";
+      source.src = image;
+      await new Promise((resolve, reject) => {
+        source.onload = resolve;
+        source.onerror = () => reject(new Error("The image could not be loaded for cropping."));
+      });
+
+      const sourceX = Math.round((crop.x / 100) * source.naturalWidth);
+      const sourceY = Math.round((crop.y / 100) * source.naturalHeight);
+      const sourceWidth = Math.round((crop.width / 100) * source.naturalWidth);
+      const sourceHeight = Math.round((crop.height / 100) * source.naturalHeight);
+      const canvas = document.createElement("canvas");
+      canvas.width = sourceWidth;
+      canvas.height = sourceHeight;
+      canvas.getContext("2d").drawImage(source, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+      if (!blob) throw new Error("Could not create the cropped image.");
+      onSave(blob);
+    } catch (error) {
+      console.error("IMAGE CROP ERROR:", error);
+      alert("Unable to crop this image. Please try a different image or re-upload it.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-xl bg-white p-5 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h2 className="text-xl font-bold">Crop product image</h2>
+          <button type="button" onClick={onCancel} className="text-sm font-medium text-gray-600 hover:text-gray-900">Close</button>
+        </div>
+        <div className="relative mx-auto aspect-square max-h-[440px] max-w-[600px] overflow-hidden bg-gray-100">
+          <img src={image} alt="Crop source" className="h-full w-full object-contain" />
+          <div
+            className="pointer-events-none absolute border-2 border-white bg-black/20 shadow-[0_0_0_9999px_rgba(0,0,0,.45)]"
+            style={{ left: `${crop.x}%`, top: `${crop.y}%`, width: `${crop.width}%`, height: `${crop.height}%` }}
+          />
+        </div>
+        <p className="mt-4 text-sm text-gray-600">Set the crop area, then save the cropped image. The original remains unchanged until the product is updated.</p>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[["x", "Left"], ["y", "Top"], ["width", "Width"], ["height", "Height"]].map(([field, label]) => (
+            <label key={field} className="text-sm font-medium text-gray-700">
+              {label} (%)
+              <input type="number" min="0" max="100" value={crop[field]} onChange={(event) => updateCrop(field, event.target.value)} className="mt-1 w-full rounded border p-2" />
+            </label>
+          ))}
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button type="button" onClick={onCancel} disabled={saving} className="rounded border px-4 py-2">Cancel</button>
+          <button type="button" onClick={createCrop} disabled={saving || crop.width === 0 || crop.height === 0} className="rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50">
+            {saving ? "Cropping..." : "Crop & replace image"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 
 
 const AdminProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [croppingImage, setCroppingImage] = useState(null);
 
   const [formData, setFormData] = useState({
   title: "",
@@ -362,6 +444,47 @@ const uploadImages = async (files) => {
   }
 };
 
+const removeProductImage = (imageIndex) => {
+  setFormData((prev) => ({
+    ...prev,
+    images: prev.images.filter((_, index) => index !== imageIndex),
+  }));
+};
+
+const uploadCroppedImage = async (blob, imageIndex) => {
+  try {
+    setUploading(true);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Your session has expired. Please login again.");
+      window.location.href = "/login";
+      return;
+    }
+
+    const imageData = new FormData();
+    imageData.append("image", new File([blob], "cropped-product-image.jpg", { type: "image/jpeg" }));
+    const response = await fetch(`${API}/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: imageData,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success || !data.imageUrl) {
+      throw new Error(data.message || "Cropped image upload failed.");
+    }
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.map((image, index) => index === imageIndex ? data.imageUrl : image),
+    }));
+    setCroppingImage(null);
+  } catch (error) {
+    console.error("CROPPED IMAGE UPLOAD ERROR:", error);
+    alert(error.message || "Failed to upload the cropped image.");
+  } finally {
+    setUploading(false);
+  }
+};
+
 const uploadUseImage = async (file, index) => {
   if (!file) return;
 
@@ -423,6 +546,13 @@ const uploadUseImage = async (file, index) => {
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4">
+      {croppingImage && (
+        <CropImageDialog
+          image={croppingImage.url}
+          onCancel={() => setCroppingImage(null)}
+          onSave={(blob) => uploadCroppedImage(blob, croppingImage.index)}
+        />
+      )}
       <h1 className="text-3xl font-bold mb-8">
         Admin Products Dashboard
       </h1>
@@ -717,12 +847,28 @@ formData.images?.length > 0&& (
   {formData.images?.map(
     (image, index) => (
 
-      <img
-        key={index}
-        src={image}
-        alt=""
-        className="w-28 h-28 object-cover rounded-lg"
-      />
+      <div key={`${image}-${index}`} className="relative">
+        <img
+          src={image}
+          alt={`Product image ${index + 1}`}
+          className="w-28 h-28 object-cover rounded-lg"
+        />
+        <button
+          type="button"
+          onClick={() => removeProductImage(index)}
+          className="absolute -top-2 -right-2 rounded-full bg-red-600 px-2 py-1 text-xs font-bold text-white shadow hover:bg-red-700"
+          aria-label={`Remove product image ${index + 1}`}
+        >
+          ×
+        </button>
+        <button
+          type="button"
+          onClick={() => setCroppingImage({ url: image, index })}
+          className="absolute bottom-1 left-1 rounded bg-black/75 px-2 py-1 text-xs font-medium text-white hover:bg-black"
+        >
+          Crop
+        </button>
+      </div>
 
     )
   )}
