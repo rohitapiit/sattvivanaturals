@@ -103,8 +103,25 @@ const formattedItems = data.cart.items
     ) => {
       const token =
         localStorage.getItem("token");
-  
-        const variantId = (variant.id || variant._id).toString();
+      const productId = product?._id || product?.id;
+
+      if (!productId) {
+        throw new Error("This product is unavailable and cannot be added to the cart.");
+      }
+
+      // Some products do not have size/weight variants. Treat the product itself
+      // as its default variant so the same Add to Cart action works on mobile and
+      // desktop product pages.
+      const cartVariant = variant || {
+        id: productId,
+        _id: productId,
+        title: product?.category || "Default",
+        price: product?.price || 0,
+        price_formatted: `₹${product?.price || 0}`,
+        inventory_quantity: availableQuantity,
+        manage_inventory: false,
+      };
+      const variantId = (cartVariant.id || cartVariant._id).toString();
 
         const existingItem = cartItems.find(
           item =>
@@ -118,7 +135,7 @@ const formattedItems = data.cart.items
           : 0;
   
       if (
-        variant.manage_inventory &&
+        cartVariant.manage_inventory &&
         currentCartQuantity + quantity >
           availableQuantity
       ) {
@@ -133,7 +150,7 @@ const formattedItems = data.cart.items
   
       if (!token) {
         setCartItems(prevItems => {
-          const variantId = (variant.id || variant._id).toString();
+          const variantId = (cartVariant.id || cartVariant._id).toString();
 
           const existingItem = prevItems.find(
             item =>
@@ -144,7 +161,7 @@ const formattedItems = data.cart.items
           if (existingItem) {
             return prevItems.map(item =>
               (item.variant.id || item.variant._id).toString() ===
-(variant.id || variant._id).toString()
+(cartVariant.id || cartVariant._id).toString()
                 ? {
                     ...item,
                     quantity:
@@ -159,7 +176,7 @@ const formattedItems = data.cart.items
             ...prevItems,
             {
               product,
-              variant,
+              variant: cartVariant,
               quantity,
             },
           ];
@@ -172,41 +189,11 @@ const formattedItems = data.cart.items
       // LOGGED-IN USER CART
       // =========================
   
-      const response = await fetch(
-        `${API}/cart/add`,
-        {
-          method: "POST",
-  
-          headers: {
-            "Content-Type":
-              "application/json",
-  
-            Authorization:
-              `Bearer ${token}`,
-          },
-  
-         body: JSON.stringify({
-  productId: product._id,
-  quantity,
-}),
-        }
-      );
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to add product to cart"
-        );
-      }
-  
-      // Refresh local React cart
-      // FIX: backend keys the cart ONLY by product._id (see Cart schema/controller),
-      // so force the stored variant.id to match product._id — otherwise later
-      // updateQuantity/removeFromCart calls send an id the backend can't find (404).
+      // Update the interface first, just as we do for guests. The server update
+      // follows immediately; if it fails, restore the exact previous cart.
+      const previousItems = cartItems;
+      const canonicalId = productId.toString();
       setCartItems(prevItems => {
-        const canonicalId = product._id.toString();
 
         const existingItem = prevItems.find(
           item =>
@@ -230,11 +217,33 @@ const formattedItems = data.cart.items
           ...prevItems,
           {
             product,
-            variant: { ...variant, id: canonicalId },
+            variant: { ...cartVariant, id: canonicalId, _id: canonicalId },
             quantity,
           },
         ];
       });
+
+      try {
+        const response = await fetch(
+          `${API}/cart/add`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ productId, quantity }),
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to add product to cart");
+        }
+      } catch (error) {
+        setCartItems(previousItems);
+        throw error;
+      }
     },
     [cartItems]
   );

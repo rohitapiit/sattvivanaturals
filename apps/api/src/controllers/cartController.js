@@ -103,11 +103,15 @@ export const addToCart = async (req, res) => {
       await cart.save();
     }
 
-    await syncAbandonedCart(req.user.userId);
-
     res.status(200).json({
       success: true,
       cart,
+    });
+
+    // This reporting snapshot is useful to admins but must not make a
+    // customer's cart interaction wait for extra reads, population, and writes.
+    void syncAbandonedCart(req.user.userId).catch((error) => {
+      console.error("ABANDONED CART SYNC ERROR:", error);
     });
   } catch (error) {
 
