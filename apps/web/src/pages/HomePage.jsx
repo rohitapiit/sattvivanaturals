@@ -9,6 +9,7 @@ import ReviewsSlider from '@/components/ReviewsSlider.jsx';
 import CertificationSection from '@/components/CertificationSection.jsx';
 
 
+
 const HomePage = () => {
   return (
     <>
@@ -19,22 +20,9 @@ const HomePage = () => {
 
       <div className="bg-background">
         <Hero />
-
-
         
 
 
-
-        
-
-
-
-
-
-      
-        
-        
-      
         
 
         <WhyChooseUs />

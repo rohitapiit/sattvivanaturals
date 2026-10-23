@@ -28,7 +28,12 @@ export const getVisibleCoupons =
         await Coupon.find({
           isVisible: true,
           isActive: true,
-        });
+          $or: [
+            { expiryDate: { $exists: false } },
+            { expiryDate: null },
+            { expiryDate: { $gte: new Date() } },
+          ],
+        }).sort({ updatedAt: -1, createdAt: -1 });
 
       res.status(200).json({
         success: true,

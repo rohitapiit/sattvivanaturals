@@ -46,6 +46,10 @@ const normalizeProductData = (body = {}) => {
     }
   }
 
+  data.displayOrder = data.displayOrder === "" || data.displayOrder === null || data.displayOrder === undefined
+    ? 9999
+    : Math.max(1, Number(data.displayOrder) || 9999);
+
   if (data.cutPrice === "" || data.cutPrice === null || data.cutPrice === undefined) {
     data.cutPrice = null;
   } else {
@@ -96,7 +100,9 @@ export const getProducts = async (req, res) => {
         }
       : {};
 
-    const products = await Product.find(searchFilter).lean();
+    const products = await Product.find(searchFilter)
+      .sort({ displayOrder: 1, createdAt: -1, _id: 1 })
+      .lean();
 
     const userReviewStats = await Review.aggregate([
       {

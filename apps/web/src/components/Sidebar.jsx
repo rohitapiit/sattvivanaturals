@@ -81,6 +81,7 @@ const Sidebar = () => {
   const adminNavItems = [
     { name: "Orders", path: "/admin/orders", icon: ShoppingCartIcon },
     { name: "Products", path: "/admin/products", icon: Package },
+    { name: "Product Order", path: "/admin/product-order", icon: Package },
     { name: "Coupons", path: "/admin/coupons", icon: TicketPercent },
     { name: "Abandoned Carts", path: "/admin/abandoned-carts", icon: AlertTriangle },
     { name: "Review Emails", path: "/admin/review-emails", icon: MailCheck },

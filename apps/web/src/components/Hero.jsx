@@ -14,6 +14,8 @@ import {
   ChevronRight,
   ShoppingBag,
   Sparkles,
+  Copy,
+  Check,
 } from "lucide-react";
 
 import {
@@ -40,6 +42,9 @@ const Hero = () => {
   const [banners, setBanners] = useState([]);
 
   const [products, setProducts] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [currentCoupon, setCurrentCoupon] = useState(0);
+  const [copiedCoupon, setCopiedCoupon] = useState(false);
 
   const [currentBanner, setCurrentBanner] = useState(0);
   const [currentProductPage, setCurrentProductPage] = useState(0);
@@ -115,6 +120,53 @@ const Hero = () => {
 
     fetchProducts();
   }, []);
+
+  // ==========================================
+  // FETCH VISIBLE COUPONS FOR THE HOMEPAGE CARD
+  // ==========================================
+
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const response = await fetch(`${API}/coupons`);
+        const data = await response.json();
+        if (data.success && Array.isArray(data.coupons)) {
+          const now = new Date();
+          const visibleCoupons = data.coupons.filter((coupon) => {
+            if (coupon.isActive === false || coupon.isVisible === false) return false;
+            const start = coupon.startDate ? new Date(coupon.startDate) : null;
+            const end = coupon.expiryDate ? new Date(coupon.expiryDate) : coupon.endDate ? new Date(coupon.endDate) : null;
+            return (!start || Number.isNaN(start.getTime()) || start <= now) && (!end || Number.isNaN(end.getTime()) || end >= now);
+          });
+          setCoupons(visibleCoupons);
+        }
+      } catch (error) {
+        console.error("FETCH HOMEPAGE COUPONS ERROR:", error);
+      }
+    };
+    fetchCoupons();
+  }, []);
+
+  useEffect(() => {
+    if (coupons.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentCoupon((index) => (index + 1) % coupons.length);
+      setCopiedCoupon(false);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [coupons.length]);
+
+  const handleCopyCoupon = async () => {
+    const code = coupons[currentCoupon]?.code;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCoupon(true);
+      setTimeout(() => setCopiedCoupon(false), 1800);
+    } catch (error) {
+      console.error("COPY COUPON ERROR:", error);
+    }
+  };
 
   // ==========================================
   // AUTO CHANGE BANNER
@@ -251,16 +303,19 @@ const Hero = () => {
         {/* ================================= */}
 
         <div
-          className="
-            relative
-            w-full
-          "
+          className={
+            coupons.length > 0
+              ? "relative z-0 isolate w-full grid grid-cols-1 items-stretch gap-3 md:gap-4 md:grid-cols-[minmax(0,3.2fr)_minmax(230px,0.9fr)]"
+              : "relative z-0 isolate w-full grid grid-cols-1 items-stretch gap-3"
+          }
         >
+          <div className="relative z-0 min-w-0 w-full self-stretch overflow-hidden rounded-[20px] border border-[#e8e1d5] bg-[#f8f6f1] aspect-[2.65/1]">
           {loadingBanners ? (
             <div
               className="
                 w-full
                 h-full
+                min-h-full
                 rounded-[20px]
                 bg-white
                 border
@@ -279,6 +334,7 @@ const Hero = () => {
               className="
                 w-full
                 h-full
+                min-h-full
                 rounded-[20px]
                 bg-white
                 border
@@ -300,6 +356,7 @@ const Hero = () => {
               className="
                 relative
                 w-full
+                h-full
                 overflow-hidden
                 cursor-pointer
                 group
@@ -331,7 +388,8 @@ const Hero = () => {
                   className="
                     block
                     w-full
-                    h-auto
+                    h-full
+                    min-w-0
                   "
                 >
                   {activeBanner?.mobileImage && (
@@ -354,7 +412,7 @@ const Hero = () => {
                     className="
                       block
                       w-full
-                      h-auto
+                      h-full
                       object-contain
                       object-center
                     "
@@ -533,6 +591,37 @@ const Hero = () => {
               )}
             </div>
           )}
+          </div>
+
+          {/* SEPARATE COUPON PANEL: aligned to the banner, never overlays it */}
+          {coupons.length > 0 && (() => {
+            const coupon = coupons[currentCoupon % coupons.length];
+            const discountLabel = coupon.discountType === "percentage" || coupon.discountType === "percent"
+              ? `${Number(coupon.discountValue) || 0}% OFF`
+              : `₹${Number(coupon.discountValue) || 0} OFF`;
+            return (
+              <aside className="relative min-w-0 h-full min-h-[250px] md:min-h-0 overflow-hidden rounded-[22px] border border-[#dfd0a3] bg-[radial-gradient(circle_at_100%_0%,rgba(213,177,82,0.18),transparent_38%),linear-gradient(145deg,#fffdf5_0%,#f5f1df_55%,#fff7df_100%)] px-4 py-5 md:px-4 md:py-5 flex flex-col items-center justify-center text-center shadow-[0_10px_28px_rgba(47,60,39,0.08)]">
+                <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border border-[#e6d8ac]/70 pointer-events-none" />
+                <div className="absolute -left-10 -bottom-12 h-32 w-32 rounded-full border border-[#e6d8ac]/70 pointer-events-none" />
+                <span className="relative z-10 inline-flex items-center gap-1.5 rounded-full border border-[#d9c58e] bg-white/75 px-3 py-1.5 text-[9px] uppercase tracking-[0.17em] font-bold text-[#8b6b2f]">
+                  <Sparkles size={12} /> Exclusive privileges
+                </span>
+                <div className="relative z-10 my-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-[#103f2d] text-[#f2cf69] shadow-lg ring-4 ring-[#e7ddbd]/60 md:h-10 md:w-10 lg:h-11 lg:w-11">
+                  <Sparkles size={22} strokeWidth={1.7} />
+                </div>
+                <p className="relative z-10 text-[9px] uppercase tracking-[0.2em] font-semibold text-[#78826a]">A little something for you</p>
+                <h3 className="relative z-10 mt-1 font-serif text-[28px] md:text-[clamp(22px,2vw,32px)] leading-tight font-bold text-[#164531]">{discountLabel}</h3>
+                <p className="relative z-10 mt-2 text-xs text-[#696b5b]">Use code</p>
+                <p className="relative z-10 mt-1 max-w-full break-all font-serif text-lg md:text-base lg:text-lg font-bold tracking-[0.12em] text-[#94712c]">{coupon.code}</p>
+                {Number(coupon.minimumAmount) > 0 && <p className="relative z-10 mt-2 text-[11px] text-[#777565]">On orders above ₹{Number(coupon.minimumAmount).toLocaleString("en-IN")}</p>}
+                <button type="button" onClick={handleCopyCoupon} className="relative z-10 mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#164b35] px-3 py-2.5 text-xs font-bold text-white shadow-[0_6px_15px_rgba(22,75,53,0.18)] transition hover:bg-[#0e3928] focus:outline-none focus:ring-2 focus:ring-[#c6a85c]">
+                  {copiedCoupon ? <Check size={15} /> : <Copy size={15} />} {copiedCoupon ? "Code copied" : "Copy offer code"}
+                </button>
+                <p className="relative z-10 mt-3 text-[8px] uppercase tracking-[0.15em] font-semibold text-[#999071]">Pure goodness. A better value.</p>
+                {coupons.length > 1 && <div className="relative z-10 mt-3 flex items-center justify-center gap-1.5">{coupons.map((item, index) => <button key={item._id || item.code || index} type="button" aria-label={`Show offer ${index + 1}`} onClick={() => { setCurrentCoupon(index); setCopiedCoupon(false); }} className={`h-1.5 rounded-full transition-all ${index === currentCoupon % coupons.length ? "w-5 bg-[#164b35]" : "w-1.5 bg-[#c8c0a5]"}`} />)}</div>}
+              </aside>
+            );
+          })()}
         </div>
 
         {/* ================================= */}
@@ -708,10 +797,6 @@ const Hero = () => {
 
                     if (!productImage) return null;
 
-                    const description =
-                      product.description ||
-                      "Wood pressed • Pure & natural";
-
                     const sellingPrice =
                       product?.variants?.[0]?.price ??
                       product?.price ??
@@ -765,10 +850,6 @@ const Hero = () => {
                             <h3 className="font-serif text-[14px] sm:text-[15px] md:text-[17px] leading-snug font-semibold text-[#29463b] line-clamp-2">
                               {product.title}
                             </h3>
-
-                            <p className="mt-1 text-[9px] md:text-[10px] leading-relaxed text-[#776f63] line-clamp-2">
-                              {description}
-                            </p>
 
                             <div className="mt-1.5 flex items-baseline gap-2 flex-wrap">
                               <span className="text-[17px] md:text-[19px] font-bold text-[#29463b]">

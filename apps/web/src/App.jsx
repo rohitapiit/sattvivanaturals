@@ -27,6 +27,7 @@ import RegisterPage from "@/pages/RegisterPage.jsx";
 import MyOrdersPage from "@/pages/MyOrdersPage.jsx";
 import AdminOrdersPage from "@/pages/AdminOrdersPage.jsx";
 import AdminProductsPage from "@/pages/AdminProductsPage.jsx";
+import AdminProductOrderPage from "@/pages/AdminProductOrderPage.jsx";
 import AdminLabReportsPage from "@/pages/AdminLabReportsPage.jsx";
 import AdminRoute from "@/components/AdminRoute";
 import CheckoutPage from "@/pages/CheckoutPage";
@@ -349,6 +350,15 @@ function AppContent() {
               element={
                 <AdminRoute>
                   <AdminProductsPage />
+                </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/admin/product-order"
+              element={
+                <AdminRoute>
+                  <AdminProductOrderPage />
                 </AdminRoute>
               }
             />

@@ -71,7 +71,7 @@ const OrderItemRow = ({ item }) => (
 );
 
 const AdminOrdersPage = () => {
-  const [stats, setStats] = useState({ totalOrders: 0, revenue: 0 });
+  const [stats, setStats] = useState({ totalOrders: 0, revenue: 0, cancelledAmount: 0 });
   const [orders, setOrders] = useState([]);
   const [trackingInputs, setTrackingInputs] = useState({});
   const [editingTrackingFor, setEditingTrackingFor] = useState({});
@@ -88,12 +88,23 @@ const AdminOrdersPage = () => {
 
       if (data.success) {
         setOrders(data.orders);
+        const cancelledOrders = data.orders.filter(
+          (order) => order.orderStatus === "Cancelled"
+        );
+        const cancelledAmount = cancelledOrders.reduce(
+          (sum, order) => sum + (Number(order.totalAmount) || 0),
+          0
+        );
+        const grossOrderValue = data.orders.reduce(
+          (sum, order) => sum + (Number(order.totalAmount) || 0),
+          0
+        );
+
         setStats({
           totalOrders: data.orders.length,
-          revenue: data.orders.reduce(
-            (sum, order) => sum + order.totalAmount,
-            0
-          ),
+          // Cancelled orders are excluded from revenue, and shown separately below.
+          revenue: grossOrderValue - cancelledAmount,
+          cancelledAmount,
         });
       }
     } catch (error) {
@@ -224,16 +235,21 @@ useEffect(() => {
         />
       </div>
 
-      <div className="grid md:grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-8">
         <StatCard
           label="Total Orders"
           value={stats.totalOrders}
           colorClass="text-blue-600"
         />
         <StatCard
-          label="Revenue"
-          value={`₹${stats.revenue}`}
+          label="Net Revenue (excl. cancelled)"
+          value={`₹${Number(stats.revenue).toLocaleString("en-IN")}`}
           colorClass="text-green-600"
+        />
+        <StatCard
+          label="Cancelled Amount Deducted"
+          value={`−₹${Number(stats.cancelledAmount).toLocaleString("en-IN")}`}
+          colorClass="text-red-600"
         />
         <StatCard
           label="Delivered Orders"

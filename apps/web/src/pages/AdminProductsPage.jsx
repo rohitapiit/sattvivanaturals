@@ -92,6 +92,7 @@ const AdminProductsPage = () => {
 
   const [formData, setFormData] = useState({
   title: "",
+  displayOrder: "9999",
   description: "",
   category: "",
   subcategory: "",
@@ -168,6 +169,7 @@ const [uploading, setUploading] = useState(false);
 
   const emptyForm = () => ({
     title: "",
+    displayOrder: "9999",
     description: "",
     category: "",
     subcategory: "",
@@ -306,6 +308,7 @@ const [uploading, setUploading] = useState(false);
 
     setFormData({
       title: product.title || "",
+      displayOrder: product.displayOrder ?? 9999,
       description: product.description || "",
       category: product.category || "",
       subcategory: product.subcategory || "",
@@ -572,6 +575,20 @@ const uploadUseImage = async (file, index) => {
     }
     className="border p-2 w-full"
   />
+
+  <label className="block text-sm font-medium text-gray-700">
+    Storefront display order (1 = first)
+    <input
+      type="number"
+      min="1"
+      step="1"
+      placeholder="1"
+      value={formData.displayOrder ?? "9999"}
+      onChange={(e) => setFormData({ ...formData, displayOrder: e.target.value })}
+      className="border p-2 w-full mt-1 rounded"
+    />
+    <span className="mt-1 block text-xs text-gray-500">Use unique numbers for precise ordering. Products with the same number are ordered by most recently added.</span>
+  </label>
 
   <input
     placeholder="Description"
@@ -993,9 +1010,10 @@ use.image && (
             key={product._id}
             className="border rounded-lg p-4"
           >
-            <h3 className="font-bold">
-              {product.title}
-            </h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-bold">{product.title}</h3>
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">Display order: {product.displayOrder ?? 9999}</span>
+            </div>
 
             <p>
   Price:

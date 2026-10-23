@@ -7,6 +7,13 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Admin-controlled storefront ordering: lower numbers appear first.
+    displayOrder: {
+      type: Number,
+      default: 9999,
+      min: 1,
+    },
+
     description: {
       type: String,
       required: true,

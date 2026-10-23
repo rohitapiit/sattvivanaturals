@@ -911,13 +911,12 @@ const ProductCatalog = () => {
                               className="
                                 w-full
                                 h-full
-
-                                object-cover
-
+                                object-contain
+                                bg-white
+                                p-2
                                 transition-transform
                                 duration-500
-
-                                group-hover:scale-105
+                                group-hover:scale-[1.03]
                               "
                             />
 
@@ -1081,27 +1080,6 @@ const ProductCatalog = () => {
                                 }
                               </h3>
                             </Link>
-
-                            {/* DESCRIPTION */}
-
-                            <p
-                              className="
-                                hidden
-                                md:block
-
-                                mt-2
-
-                                text-sm
-
-                                text-muted-foreground
-
-                                line-clamp-2
-                              "
-                            >
-                              {
-                                product.description
-                              }
-                            </p>
 
                             {/* PRICE + BUTTON */}
 

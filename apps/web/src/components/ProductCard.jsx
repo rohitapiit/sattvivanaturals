@@ -184,13 +184,13 @@ const ProductCard = ({ product, index = 0 }) => {
               }
               alt={product?.title || "Product"}
               className="
-                max-w-full
-                max-h-full
+                h-full
+                w-full
                 object-contain
-                p-2
+                p-3
                 transition-transform
                 duration-500
-                group-hover:scale-105
+                group-hover:scale-[1.03]
               "
             />
 
@@ -208,11 +208,7 @@ const ProductCard = ({ product, index = 0 }) => {
               {product?.title}
             </h3>
 
-            <p className="body-font text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">
-              {product?.subtitle ||
-                product?.description ||
-                "Discover the pure, natural goodness of our traditional selections."}
-            </p>
+
           </div>
         </Link>
 
