@@ -309,7 +309,7 @@ const Hero = () => {
               : "relative z-0 isolate w-full grid grid-cols-1 items-stretch gap-3"
           }
         >
-          <div className="relative z-0 min-w-0 w-full self-stretch overflow-hidden rounded-[20px] border border-[#e8e1d5] bg-[#f8f6f1] aspect-[2.65/1]">
+          <div className="relative z-0 min-w-0 w-full self-stretch overflow-hidden rounded-[16px] sm:rounded-[20px] border border-[#e8e1d5] bg-[#f8f6f1] aspect-[4/3] sm:aspect-[16/9] md:aspect-[2.65/1]">
           {loadingBanners ? (
             <div
               className="
@@ -415,6 +415,7 @@ const Hero = () => {
                       h-full
                       object-contain
                       object-center
+                      bg-[#f8f6f1]
                     "
                   />
                 </motion.picture>

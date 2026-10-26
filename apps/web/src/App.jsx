@@ -75,6 +75,18 @@ function AppContent() {
     setIsCartOpen(false);
   }, [location.pathname]);
 
+  // Record navigation between pages in the single-page React app.
+  useEffect(() => {
+    const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+    if (/^G-[A-Z0-9]+$/.test(gaId || "") && !gaId.includes("REPLACE_WITH")) {
+      import("react-ga4").then(({ default: ReactGA }) => {
+        ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
+      }).catch((error) => {
+        console.error("Unable to send Google Analytics pageview", error);
+      });
+    }
+  }, [location.pathname, location.search]);
+
   // ==========================================
   // OPEN CART
   // ==========================================

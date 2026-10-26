@@ -8,19 +8,15 @@ import { AuthProvider } from '@/context/AuthContext';
 import ReactGA from "react-ga4";
 
 
-ReactGA.initialize(
-  import.meta.env.VITE_GA_MEASUREMENT_ID,
-  {
-    gaOptions: {
-      debug_mode: true,
-    },
-  }
-);
+const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+const hasValidGaId = /^G-[A-Z0-9]+$/.test(gaMeasurementId || "") &&
+  !gaMeasurementId.includes("REPLACE_WITH");
 
-console.log(
-  "GA ID:",
-  import.meta.env.VITE_GA_MEASUREMENT_ID
-);
+if (hasValidGaId) {
+  ReactGA.initialize(gaMeasurementId);
+} else {
+  console.warn("Google Analytics is not initialized. Set VITE_GA_MEASUREMENT_ID to your new GA4 Measurement ID.");
+}
 ReactDOM.createRoot(document.getElementById('root')).render(
 
 	<>
