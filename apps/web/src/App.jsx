@@ -191,7 +191,7 @@ function AppContent() {
             {/* ================= PRODUCT DETAIL ================= */}
 
             <Route
-              path="/product/:id"
+              path="/product/:slug"
               element={
                 <ProductDetailPage />
               }

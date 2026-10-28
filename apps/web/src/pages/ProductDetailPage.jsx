@@ -5,6 +5,10 @@ import React, {
 } from "react";
 
 import SeoHead, { getAbsoluteUrl } from "@/components/SeoHead.jsx";
+import {
+  findProductBySlug,
+  getProductPath,
+} from "@/lib/productUrl.js";
 
 import {
   useParams,
@@ -45,7 +49,7 @@ function ProductDetailPage() {
   // ROUTER
   // ==========================================
 
-  const { id } = useParams();
+  const { id: productUrl } = useParams();
 
   const navigate =
     useNavigate();
@@ -152,30 +156,39 @@ function ProductDetailPage() {
           setLoading(true);
           setError(null);
 
-          // ------------------------------
-          // FETCH CURRENT PRODUCT
-          // ------------------------------
+          let productId = productUrl;
+          let products = [];
 
-          const productResponse =
-            await fetch(
-              `${API}/products/${id}`
-            );
+          if (!/^[a-f\d]{24}$/i.test(productUrl)) {
+            const productsResponse = await fetch(`${API}/products`);
+            const productsData = await productsResponse.json();
 
-          const productData =
-            await productResponse.json();
+            if (!productsResponse.ok || !productsData.success) {
+              throw new Error(
+                productsData.message || "Unable to find product."
+              );
+            }
 
-          if (
-            !productResponse.ok ||
-            !productData.success
-          ) {
-            throw new Error(
-              productData.message ||
-                "Product not found"
-            );
+            products = productsData.products || [];
+            const matchingProduct = findProductBySlug(products, productUrl);
+
+            if (!matchingProduct) {
+              throw new Error("Product not found");
+            }
+
+            productId = matchingProduct._id;
           }
 
-          const fetchedProduct =
-            productData.product;
+          const productResponse = await fetch(
+            `${API}/products/${productId}`
+          );
+          const productData = await productResponse.json();
+
+          if (!productResponse.ok || !productData.success) {
+            throw new Error(productData.message || "Product not found");
+          }
+
+          const fetchedProduct = productData.product;
 
           setProduct(
             fetchedProduct
@@ -206,20 +219,27 @@ function ProductDetailPage() {
           // FETCH ALL PRODUCTS
           // ------------------------------
 
-          const productsResponse =
-            await fetch(
-              `${API}/products`
-            );
+          if (products.length === 0) {
+            const productsResponse = await fetch(`${API}/products`);
+            const productsData = await productsResponse.json();
 
-          const productsData =
-            await productsResponse.json();
+            if (!productsResponse.ok || !productsData.success) {
+              throw new Error(
+                productsData.message || "Unable to load related products."
+              );
+            }
 
-          if (
-            productsData.success
-          ) {
-            setAllProducts(
-              productsData.products || []
-            );
+            products = productsData.products || [];
+          }
+
+          setAllProducts(products);
+
+          const canonicalPath = getProductPath(
+            fetchedProduct,
+            products
+          );
+          if (productUrl !== canonicalPath.split("/").pop()) {
+            navigate(canonicalPath, { replace: true });
           }
         } catch (fetchError) {
           console.error(
@@ -235,10 +255,10 @@ function ProductDetailPage() {
         }
       };
 
-    if (id) {
+    if (productUrl) {
       fetchProductData();
     }
-  }, [id]);
+  }, [productUrl, navigate]);
 
   // ==========================================
   // FETCH REVIEWS
@@ -252,7 +272,7 @@ function ProductDetailPage() {
 
           const response =
             await fetch(
-              `${API}/reviews/product/${id}`
+              `${API}/reviews/product/${product._id}`
             );
 
           const data =
@@ -281,10 +301,10 @@ function ProductDetailPage() {
         }
       };
 
-    if (id) {
+    if (product?._id) {
       fetchReviews();
     }
-  }, [id]);
+  }, [product?._id]);
 
   // ==========================================
   // ADD TO CART
@@ -686,7 +706,7 @@ function ProductDetailPage() {
       : []),
     {
       name: productDisplayName,
-      item: getAbsoluteUrl(`/product/${product._id}`),
+      item: getAbsoluteUrl(getProductPath(product, allProducts)),
     },
   ];
   const productSchema = {
@@ -706,7 +726,7 @@ function ProductDetailPage() {
       ? {
           offers: {
             "@type": "Offer",
-            url: getAbsoluteUrl(`/product/${product._id}`),
+            url: getAbsoluteUrl(getProductPath(product, allProducts)),
             priceCurrency: "INR",
             price: productPrice.toFixed(2),
             availability:
@@ -2314,7 +2334,7 @@ function ProductDetailPage() {
                       "
                       onClick={() =>
                         navigate(
-                          `/product/${item._id}`
+                          getProductPath(item, allProducts)
                         )
                       }
                     >

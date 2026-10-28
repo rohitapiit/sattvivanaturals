@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import SeoHead from "@/components/SeoHead.jsx";
+import { getProductPath } from "@/lib/productUrl.js";
 
 import {
   motion,
@@ -965,7 +966,7 @@ const ProductCatalog = () => {
                           {/* PRODUCT IMAGE */}
 
                           <Link
-                            to={`/product/${product._id}`}
+                            to={getProductPath(product, products)}
                             className="
                               relative
                               block
@@ -1128,7 +1129,7 @@ const ProductCatalog = () => {
                             {/* TITLE */}
 
                             <Link
-                              to={`/product/${product._id}`}
+                              to={getProductPath(product, products)}
                             >
                               <h3
                                 className="

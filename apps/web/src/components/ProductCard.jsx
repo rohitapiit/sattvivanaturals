@@ -6,6 +6,7 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
+import { getProductPath } from "@/lib/productUrl.js";
 
 const ProductCard = ({ product, index = 0 }) => {
   const { addToCart } = useCart();
@@ -69,7 +70,7 @@ const ProductCard = ({ product, index = 0 }) => {
     // ==========================================
 
     if (product?.variants?.length > 1) {
-      navigate(`/product/${productId}`);
+      navigate(getProductPath(product));
       return;
     }
 
@@ -170,7 +171,7 @@ const ProductCard = ({ product, index = 0 }) => {
         ========================================== */}
 
         <Link
-          to={`/product/${productId}`}
+          to={getProductPath(product)}
           className="block flex flex-col h-full"
         >
           {/* IMAGE */}

@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/hooks/useCart";
+import { getProductPath } from "@/lib/productUrl.js";
 
 const AnnouncementStrip = () => {
   const announcements = [
@@ -154,8 +155,8 @@ const StickyHeader = ({ onCartOpen }) => {
     navigate("/");
   };
 
-  const handleProductClick = (productId) => {
-    navigate(`/product/${productId}`);
+  const handleProductClick = (product) => {
+    navigate(getProductPath(product, products));
     setSearch("");
     setShowDropdown(false);
   };
@@ -240,9 +241,7 @@ const StickyHeader = ({ onCartOpen }) => {
                         key={product._id}
                         type="button"
                         onClick={() =>
-                          handleProductClick(
-                            product._id
-                          )
+                          handleProductClick(product)
                         }
                         className="
                           w-full
@@ -419,9 +418,7 @@ const StickyHeader = ({ onCartOpen }) => {
                         key={product._id}
                         type="button"
                         onClick={() =>
-                          handleProductClick(
-                            product._id
-                          )
+                          handleProductClick(product)
                         }
                         className="
                           w-full
