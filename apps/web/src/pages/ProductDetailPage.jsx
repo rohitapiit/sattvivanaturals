@@ -1280,8 +1280,9 @@ function ProductDetailPage() {
             <h1
               className="
                 text-xl
+                leading-tight
                 sm:text-2xl
-                md:text-4xl
+                md:text-3xl
 
                 font-bold
 
@@ -1290,7 +1291,7 @@ function ProductDetailPage() {
                 mb-2
 
                 break-words
-                [overflow-wrap:anywhere]
+                [overflow-wrap:break-word]
               "
             >
               {productDisplayName}
