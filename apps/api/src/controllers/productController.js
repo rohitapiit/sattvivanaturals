@@ -196,8 +196,17 @@ export const getSeoIndexProducts = async (req, res) => {
 };
 
 export const getProductById = async (req, res) => {
+  const { id } = req.params;
+
+  if (!/^[a-f\d]{24}$/i.test(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Product ID must be a valid 24-character ObjectId.",
+    });
+  }
+
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({
@@ -211,6 +220,7 @@ export const getProductById = async (req, res) => {
       product,
     });
   } catch (error) {
+    console.error("GET PRODUCT BY ID ERROR:", error);
     return res.status(500).json({
       success: false,
       message: error.message,

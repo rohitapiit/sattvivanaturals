@@ -147,19 +147,23 @@ function ProductDetailPage() {
   // ==========================================
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    setProduct(null);
+    setSelectedVariant(null);
+    setCurrentImageIndex(0);
+    setQuantity(1);
+    setAdded(false);
+    setError(null);
+    setLoading(true);
+
     const fetchProductData =
       async () => {
         try {
-          setLoading(true);
-          setError(null);
-
-          // ------------------------------
-          // FETCH CURRENT PRODUCT
-          // ------------------------------
-
           const productResponse =
             await fetch(
-              `${API}/products/${id}`
+              `${API}/products/${encodeURIComponent(id)}`,
+              { signal: controller.signal }
             );
 
           const productData =
@@ -178,61 +182,29 @@ function ProductDetailPage() {
           const fetchedProduct =
             productData.product;
 
-          setProduct(
-            fetchedProduct
-          );
-
-          // ------------------------------
-          // SET DEFAULT VARIANT
-          // ------------------------------
-
           if (
-            fetchedProduct.variants &&
-            fetchedProduct.variants.length > 0
+            !fetchedProduct ||
+            String(fetchedProduct._id).toLowerCase() !== id.toLowerCase()
           ) {
-            setSelectedVariant(
-              fetchedProduct.variants[0]
-            );
-          } else {
-            setSelectedVariant(null);
-          }
-
-          // ------------------------------
-          // RESET IMAGE
-          // ------------------------------
-
-          setCurrentImageIndex(0);
-          setLoading(false);
-
-          // ------------------------------
-          // FETCH RELATED PRODUCTS
-          // ------------------------------
-
-          try {
-            const productsResponse =
-              await fetch(
-                `${API}/products`
-              );
-
-            const productsData =
-              await productsResponse.json();
-
-            if (!productsResponse.ok || !productsData.success) {
-              throw new Error(
-                productsData.message || "Unable to load related products."
-              );
-            }
-
-            setAllProducts(
-              productsData.products || []
-            );
-          } catch (relatedProductsError) {
-            console.error(
-              "FETCH RELATED PRODUCTS ERROR:",
-              relatedProductsError
+            throw new Error(
+              "The API returned a different product than requested."
             );
           }
+
+          if (controller.signal.aborted) {
+            return;
+          }
+
+          setProduct(fetchedProduct);
+
+          setSelectedVariant(
+            fetchedProduct.variants?.[0] || null
+          );
         } catch (fetchError) {
+          if (controller.signal.aborted) {
+            return;
+          }
+
           console.error(
             "FETCH PRODUCT ERROR:",
             fetchError
@@ -242,59 +214,111 @@ function ProductDetailPage() {
             fetchError.message
           );
         } finally {
-          setLoading(false);
+          if (!controller.signal.aborted) {
+            setLoading(false);
+          }
         }
       };
 
     if (id) {
       fetchProductData();
+    } else {
+      setError("Product not found");
+      setLoading(false);
     }
+
+    return () => controller.abort();
   }, [id]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchRelatedProducts = async () => {
+      try {
+        const response = await fetch(`${API}/products`, {
+          signal: controller.signal,
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Unable to load related products."
+          );
+        }
+
+        if (!controller.signal.aborted) {
+          setAllProducts(data.products || []);
+        }
+      } catch (fetchError) {
+        if (!controller.signal.aborted) {
+          console.error(
+            "FETCH RELATED PRODUCTS ERROR:",
+            fetchError
+          );
+        }
+      }
+    };
+
+    fetchRelatedProducts();
+    return () => controller.abort();
+  }, []);
 
   // ==========================================
   // FETCH REVIEWS
   // ==========================================
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    setReviews([]);
+    setAverageRating(0);
+    setTotalReviews(0);
+    setReviewsLoading(Boolean(id));
+
     const fetchReviews =
       async () => {
         try {
-          setReviewsLoading(true);
-
           const response =
             await fetch(
-              `${API}/reviews/product/${id}`
+              `${API}/reviews/product/${encodeURIComponent(id)}`,
+              { signal: controller.signal }
             );
 
           const data =
             await response.json();
 
-          if (data.success) {
-            setReviews(
-              data.reviews || []
-            );
-
-            setAverageRating(
-              data.averageRating || 0
-            );
-
-            setTotalReviews(
-              data.totalReviews || 0
+          if (!response.ok || !data.success) {
+            throw new Error(
+              data.message || "Unable to load product reviews."
             );
           }
+
+          if (controller.signal.aborted) {
+            return;
+          }
+
+          setReviews(data.reviews || []);
+          setAverageRating(data.averageRating || 0);
+          setTotalReviews(data.totalReviews || 0);
         } catch (fetchError) {
-          console.error(
-            "FETCH PRODUCT REVIEWS ERROR:",
-            fetchError
-          );
+          if (!controller.signal.aborted) {
+            console.error(
+              "FETCH PRODUCT REVIEWS ERROR:",
+              fetchError
+            );
+          }
         } finally {
-          setReviewsLoading(false);
+          if (!controller.signal.aborted) {
+            setReviewsLoading(false);
+          }
         }
       };
 
     if (id) {
       fetchReviews();
     }
+
+    return () => controller.abort();
   }, [id]);
 
   // ==========================================
@@ -533,7 +557,11 @@ function ProductDetailPage() {
   // LOADING
   // ==========================================
 
-  if (loading) {
+  if (
+    loading ||
+    (!product && !error) ||
+    (product && String(product._id) !== id)
+  ) {
     return (
       <div
         className="
@@ -1251,8 +1279,8 @@ function ProductDetailPage() {
 
             <h1
               className="
-                text-2xl
-                sm:text-3xl
+                text-xl
+                sm:text-2xl
                 md:text-4xl
 
                 font-bold
@@ -1262,6 +1290,7 @@ function ProductDetailPage() {
                 mb-2
 
                 break-words
+                [overflow-wrap:anywhere]
               "
             >
               {productDisplayName}
