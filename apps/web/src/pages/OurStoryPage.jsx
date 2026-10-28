@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
+import SeoHead from '@/components/SeoHead.jsx';
 
 const OurStoryPage = () => {
   const sections = [
@@ -39,10 +39,10 @@ const OurStoryPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Our Story - SattViva Naturals | Journey to Pure Traditional Foods</title>
-        <meta name="description" content="Discover the story behind SattViva Naturals - our journey from questioning modern food to rediscovering traditional methods and bringing pure, authentic nutrition to families." />
-      </Helmet>
+      <SeoHead
+        title="Our Story | Sattviva Naturals"
+        description="Learn about the story and values behind Sattviva Naturals and our focus on traditional foods."
+      />
 
       <div className="bg-background">
         <div className="relative h-[30vh] flex items-center justify-center overflow-hidden">

@@ -1,7 +1,13 @@
 import React from "react";
+import SeoHead from "@/components/SeoHead.jsx";
 
 export default function KnowYourFacilityPage() {
   return (
+    <>
+    <SeoHead
+      title="Know Your Facility | Sattviva Naturals"
+      description="Watch a video tour of the Sattviva Naturals facility."
+    />
     <div className="min-h-screen bg-white p-6">
 
       <div className="max-w-7xl mx-auto">
@@ -38,5 +44,6 @@ export default function KnowYourFacilityPage() {
       </div>
 
     </div>
+    </>
   );
 }

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin-contacts
+
+Sitemap: https://sattvivanaturals.com/sitemap.xml

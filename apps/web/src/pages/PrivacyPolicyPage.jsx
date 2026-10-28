@@ -1,11 +1,12 @@
-import { Helmet } from "react-helmet";
+import SeoHead from "@/components/SeoHead.jsx";
 
 const PrivacyPolicyPage = () => {
   return (
     <>
-      <Helmet>
-        <title>Privacy Policy | SattViva Naturals</title>
-      </Helmet>
+      <SeoHead
+        title="Privacy Policy | Sattviva Naturals"
+        description="Read how Sattviva Naturals collects, uses and protects personal information."
+      />
 
       <div className="max-w-5xl mx-auto px-6 py-16">
         <h1 className="heading-font text-5xl font-bold mb-8">

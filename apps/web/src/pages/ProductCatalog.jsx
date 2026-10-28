@@ -4,7 +4,7 @@ import React, {
   useEffect,
 } from "react";
 
-import { Helmet } from "react-helmet";
+import SeoHead from "@/components/SeoHead.jsx";
 
 import {
   motion,
@@ -22,7 +22,6 @@ import ReactGA from "react-ga4";
 
 import {
   Link,
-  useNavigate,
   useParams,
 } from "react-router-dom";
 
@@ -48,13 +47,26 @@ const categories = [
   "Health Punch",
 ];
 
+const categoryRoutes = {
+  All: "/products",
+  Oils: "/products/oils",
+  "Dry Fruits": "/products/dry-fruits",
+  Spices: "/products/spices",
+  "Health Punch": "/products/health-punch",
+};
+
+const categoryLabels = {
+  oils: "Cooking Oils",
+  "dry-fruits": "Dry Fruits",
+  spices: "Spices",
+  "health-punch": "Health Punch",
+};
+
 // ==========================================
 // PRODUCT CATALOG
 // ==========================================
 
 const ProductCatalog = () => {
-  const navigate = useNavigate();
-
   const {
     category,
     subCategory,
@@ -135,8 +147,7 @@ const ProductCatalog = () => {
       oils: "Oils",
       "dry-fruits": "Dry Fruits",
       spices: "Spices",
-      "health-punch":
-        "Health Punch",
+      "health-punch": "Health Punch",
     };
 
     setActiveCategory(
@@ -147,30 +158,6 @@ const ProductCatalog = () => {
   // ==========================================
   // CATEGORY CLICK
   // ==========================================
-
-  const handleCategoryClick = (
-    selectedCategory
-  ) => {
-    setActiveCategory(
-      selectedCategory
-    );
-
-    const routes = {
-      All: "/products",
-      Oils: "/products/oils",
-      "Dry Fruits":
-        "/products/dry-fruits",
-      Spices:
-        "/products/spices",
-      "Health Punch":
-        "/products/health-punch",
-    };
-
-    navigate(
-      routes[selectedCategory] ||
-        "/products"
-    );
-  };
 
   // ==========================================
   // NORMALIZE CATEGORY
@@ -256,6 +243,58 @@ const ProductCatalog = () => {
       category
     ) &&
     filteredProducts.length === 0;
+  const isEmptyCategory =
+    Boolean(category) &&
+    !loading &&
+    filteredProducts.length === 0;
+  const categoryLabel =
+    categoryLabels[category?.toLowerCase()] ||
+    (category
+      ? category.replace(/-/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+      : null);
+  const subCategoryLabel = subCategory
+    ? subCategory.replace(/-/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : null;
+  const pageTitle = subCategoryLabel
+    ? `${subCategoryLabel} | ${categoryLabel} | Sattviva Naturals`
+    : categoryLabel
+      ? `${categoryLabel} | Sattviva Naturals`
+    : "Shop Natural Foods | Sattviva Naturals";
+  const pageDescription = subCategoryLabel
+    ? `Explore available ${subCategoryLabel.toLowerCase()} in Sattviva Naturals ${categoryLabel?.toLowerCase()}. Compare product details, pack sizes and prices.`
+    : categoryLabel
+      ? `Explore available Sattviva Naturals ${categoryLabel.toLowerCase()}. Compare product details, pack sizes and prices, and find ordering information.`
+    : "Browse Sattviva Naturals products. Explore product details, available pack sizes, prices and online ordering information.";
+  const breadcrumbItems = [
+    { name: "Home", item: "https://sattvivanaturals.com/" },
+    { name: "Products", item: "https://sattvivanaturals.com/products" },
+    ...(categoryLabel
+      ? [
+          {
+            name: categoryLabel,
+            item: `https://sattvivanaturals.com/products/${category}`,
+          },
+        ]
+      : []),
+    ...(subCategoryLabel
+      ? [
+          {
+            name: subCategoryLabel,
+            item: `https://sattvivanaturals.com/products/${category}/${subCategory}`,
+          },
+        ]
+      : []),
+  ];
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.item,
+    })),
+  };
 
   // ==========================================
   // GET PRODUCT PRICE
@@ -436,17 +475,12 @@ const ProductCatalog = () => {
 
   return (
     <>
-      <Helmet>
-        <title>
-          Shop Premium Products |
-          SattViva Naturals
-        </title>
-
-        <meta
-          name="description"
-          content="Explore our complete collection of premium natural products."
-        />
-      </Helmet>
+      <SeoHead
+        title={pageTitle}
+        description={pageDescription}
+        noindex={isEmptyCategory}
+        structuredData={breadcrumbSchema}
+      />
 
       <div
         className="
@@ -460,6 +494,52 @@ const ProductCatalog = () => {
         {/* ====================================== */}
         {/* PAGE HEADER */}
         {/* ====================================== */}
+
+        <nav
+          aria-label="Breadcrumb"
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 text-sm text-muted-foreground"
+        >
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link to="/" className="hover:text-foreground">
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              {categoryLabel ? (
+                <Link to="/products" className="hover:text-foreground">
+                  Products
+                </Link>
+              ) : (
+                <span aria-current="page">Products</span>
+              )}
+            </li>
+            {categoryLabel && (
+              <>
+                <li aria-hidden="true">/</li>
+                <li>
+                  {subCategoryLabel ? (
+                    <Link
+                      to={`/products/${category}`}
+                      className="hover:text-foreground"
+                    >
+                      {categoryLabel}
+                    </Link>
+                  ) : (
+                    <span aria-current="page">{categoryLabel}</span>
+                  )}
+                </li>
+                {subCategoryLabel && (
+                  <>
+                    <li aria-hidden="true">/</li>
+                    <li aria-current="page">{subCategoryLabel}</li>
+                  </>
+                )}
+              </>
+            )}
+          </ol>
+        </nav>
 
         <section
           className="
@@ -505,7 +585,11 @@ const ProductCatalog = () => {
                 text-foreground
               "
             >
-              Premium Collections
+              {subCategoryLabel
+                ? `Explore ${subCategoryLabel}`
+                : categoryLabel
+                  ? `Explore ${categoryLabel}`
+                : "Shop Sattviva Naturals Products"}
             </motion.h1>
 
             <motion.p
@@ -535,10 +619,9 @@ const ProductCatalog = () => {
                 leading-relaxed
               "
             >
-              Discover natural,
-              traditionally processed
-              staples for your everyday
-              wellness.
+              {categoryLabel
+                ? `Browse available ${categoryLabel.toLowerCase()} and compare product details, pack sizes and prices.`
+                : "Browse product details, available pack sizes, prices and online ordering information."}
             </motion.p>
           </div>
         </section>
@@ -604,14 +687,10 @@ const ProductCatalog = () => {
               >
                 {categories.map(
                   (cat) => (
-                    <button
+                    <Link
                       key={cat}
-                      type="button"
-                      onClick={() =>
-                        handleCategoryClick(
-                          cat
-                        )
-                      }
+                      to={categoryRoutes[cat]}
+                      onClick={() => setActiveCategory(cat)}
                       className={`
                         shrink-0
 
@@ -649,7 +728,7 @@ const ProductCatalog = () => {
                       `}
                     >
                       {cat}
-                    </button>
+                    </Link>
                   )
                 )}
               </div>
@@ -904,9 +983,7 @@ const ProductCatalog = () => {
                                   .images?.[0] ||
                                 "/images/logo.png"
                               }
-                              alt={
-                                product.title
-                              }
+                              alt={product.images?.[0] ? product.title : ""}
                               loading="lazy"
                               className="
                                 w-full

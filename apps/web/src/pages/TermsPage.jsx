@@ -1,11 +1,12 @@
-import { Helmet } from "react-helmet";
+import SeoHead from "@/components/SeoHead.jsx";
 
 const TermsPage = () => {
   return (
     <>
-      <Helmet>
-        <title>Terms & Conditions | SattViva Naturals</title>
-      </Helmet>
+      <SeoHead
+        title="Terms & Conditions | Sattviva Naturals"
+        description="Review the terms and conditions for using the Sattviva Naturals website and placing an order."
+      />
 
       <div className="max-w-5xl mx-auto px-6 py-16">
         <h1 className="heading-font text-5xl font-bold mb-8">

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import {
+  Link,
   useNavigate,
 } from "react-router-dom";
 
@@ -698,7 +699,7 @@ const Hero = () => {
               <Sparkles size={11} />
             </div>
 
-            <h2
+            <h1
               className="
                 font-serif
                 text-[#27463b]
@@ -709,8 +710,8 @@ const Hero = () => {
                 leading-tight
               "
             >
-              Explore Our Products
-            </h2>
+              Traditional Cooking Oils &amp; Natural Foods
+            </h1>
           </div>
 
           {/* ================================= */}
@@ -794,9 +795,13 @@ const Hero = () => {
                   "
                 >
                   {visibleProducts.map((product) => {
-                    const productImage = product.images?.[0];
-
-                    if (!productImage) return null;
+                    const productImage =
+                      product.images?.[0] || "/images/logo.png";
+                    const stock =
+                      product?.variants?.[0]?.stock ??
+                      product?.stock ??
+                      0;
+                    const isOutOfStock = stock <= 0;
 
                     const sellingPrice =
                       product?.variants?.[0]?.price ??
@@ -831,17 +836,23 @@ const Hero = () => {
                         "
                       >
                         <div className="flex items-center min-h-[120px] px-3 py-2.5 sm:px-4 md:min-h-[125px] lg:px-4">
-                          <div className="flex items-center justify-center shrink-0 w-[28%] min-w-[75px] h-[105px] md:h-[110px]">
+                          <Link
+                            to={`/product/${product._id}`}
+                            aria-label={`View ${product.title}`}
+                            className="flex items-center justify-center shrink-0 w-[28%] min-w-[75px] h-[105px] md:h-[110px]"
+                          >
                             <img
                               src={productImage}
-                              alt={product.title || "Product"}
+                              alt={product.images?.[0] ? product.title : ""}
+                              loading="lazy"
+                              decoding="async"
                               className="
                                 w-full h-full object-contain
                                 transition-transform duration-300
                                 group-hover/product:scale-105
                               "
                             />
-                          </div>
+                          </Link>
 
                           <div className="flex-1 min-w-0 pl-3 md:pl-4">
                             <span className="block text-[7px] md:text-[8px] uppercase tracking-[0.18em] font-semibold text-[#987842] mb-1">
@@ -849,7 +860,12 @@ const Hero = () => {
                             </span>
 
                             <h3 className="font-serif text-[14px] sm:text-[15px] md:text-[17px] leading-snug font-semibold text-[#29463b] line-clamp-2">
-                              {product.title}
+                              <Link
+                                to={`/product/${product._id}`}
+                                className="hover:underline"
+                              >
+                                {product.title}
+                              </Link>
                             </h3>
 
                             <div className="mt-1.5 flex items-baseline gap-2 flex-wrap">
@@ -862,13 +878,21 @@ const Hero = () => {
                                   ₹{Number(cutPrice).toLocaleString("en-IN")}
                                 </span>
                               )}
+                              <span
+                                className={`text-[10px] md:text-xs font-medium ${
+                                  isOutOfStock
+                                    ? "text-red-700"
+                                    : "text-green-700"
+                                }`}
+                              >
+                                {isOutOfStock ? "Out of stock" : "In stock"}
+                              </span>
                             </div>
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/product/${product._id}`)}
+                        <Link
+                          to={`/product/${product._id}`}
                           className="
                             relative w-full flex items-center justify-center gap-2
                             py-2.5 md:py-3 bg-[#204b38] text-white
@@ -877,7 +901,7 @@ const Hero = () => {
                           "
                         >
                           <ShoppingBag size={14} />
-                          <span>Buy Now</span>
+                          <span>{isOutOfStock ? "View Details" : "Buy Now"}</span>
                           <ArrowRight
                             size={14}
                             className="
@@ -885,7 +909,7 @@ const Hero = () => {
                               group-hover/product:translate-x-1
                             "
                           />
-                        </button>
+                        </Link>
                       </div>
                     );
                   })}

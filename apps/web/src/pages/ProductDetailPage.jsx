@@ -4,7 +4,7 @@ import React, {
   useCallback,
 } from "react";
 
-import { Helmet } from "react-helmet";
+import SeoHead, { getAbsoluteUrl } from "@/components/SeoHead.jsx";
 
 import {
   useParams,
@@ -655,6 +655,79 @@ function ProductDetailPage() {
         item._id !==
         product._id
     );
+  const variantSize = selectedVariant?.size?.trim();
+  const productDisplayName =
+    variantSize &&
+    !product.title.toLowerCase().includes(variantSize.toLowerCase())
+      ? `${product.title} ${variantSize}`
+      : product.title;
+  const productDescription = (product.description || product.title)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+  const productPrice = Number(
+    selectedVariant?.price ?? product.price
+  );
+  const categorySlug = product.category
+    ?.toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-");
+  const productBreadcrumbs = [
+    { name: "Home", item: getAbsoluteUrl("/") },
+    { name: "Products", item: getAbsoluteUrl("/products") },
+    ...(product.category
+      ? [
+          {
+            name: product.category,
+            item: getAbsoluteUrl(`/products/${categorySlug}`),
+          },
+        ]
+      : []),
+    {
+      name: productDisplayName,
+      item: getAbsoluteUrl(`/product/${product._id}`),
+    },
+  ];
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: productDisplayName,
+    description: productDescription,
+    ...(product.images?.length
+      ? { image: product.images.map(getAbsoluteUrl) }
+      : {}),
+    brand: {
+      "@type": "Brand",
+      name: "Sattviva Naturals",
+    },
+    ...(selectedVariant?.sku ? { sku: selectedVariant.sku } : {}),
+    ...(Number.isFinite(productPrice) && productPrice > 0
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: getAbsoluteUrl(`/product/${product._id}`),
+            priceCurrency: "INR",
+            price: productPrice.toFixed(2),
+            availability:
+              availableStock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+            itemCondition: "https://schema.org/NewCondition",
+          },
+        }
+      : {}),
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: productBreadcrumbs.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.item,
+    })),
+  };
 
   // ==========================================
   // RENDER
@@ -662,24 +735,13 @@ function ProductDetailPage() {
 
   return (
     <>
-      <Helmet>
-        <title>
-          {product.title}
-          {" - "}
-          Our Store
-        </title>
-
-        <meta
-          name="description"
-          content={
-            product.description?.substring(
-              0,
-              160
-            ) ||
-            product.title
-          }
-        />
-      </Helmet>
+      <SeoHead
+        title={`${productDisplayName} | Sattviva Naturals`}
+        description={productDescription}
+        image={product.images?.[0]}
+        type="product"
+        structuredData={[productSchema, breadcrumbSchema]}
+      />
 
       <div
         className="
@@ -694,23 +756,44 @@ function ProductDetailPage() {
       >
         {/* BACK TO PRODUCT CATALOG */}
 
-        <Link
-          to="/products"
+        <nav
+          aria-label="Breadcrumb"
           className="
-            inline-flex
-            items-center
-            gap-2
-            text-primary
-            hover:text-purple-300
-            transition-colors
+            text-sm
+            text-gray-600
             mb-4
             sm:mb-6
           "
         >
-          <ArrowLeft size={16} />
-
-          Back to Products
-        </Link>
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              <Link to="/" className="hover:text-primary">
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link to="/products" className="hover:text-primary">
+                Products
+              </Link>
+            </li>
+            {product.category && (
+              <>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link
+                    to={`/products/${categorySlug}`}
+                    className="hover:text-primary"
+                  >
+                    {product.category}
+                  </Link>
+                </li>
+              </>
+            )}
+            <li aria-hidden="true">/</li>
+            <li aria-current="page">{productDisplayName}</li>
+          </ol>
+        </nav>
 
         {/* PRODUCT CARD */}
 
@@ -784,9 +867,7 @@ function ProductDetailPage() {
                 src={
                   currentImage
                 }
-                alt={
-                  product.title
-                }
+                alt={product.images?.length ? productDisplayName : ""}
                 className="
                   w-full
                   h-full
@@ -977,7 +1058,7 @@ function ProductDetailPage() {
                           "/images/logo.png"
                         }
                         alt={
-                          `${product.title} ${
+                          `${productDisplayName} ${
                             index + 1
                           }`
                         }
@@ -1133,7 +1214,7 @@ function ProductDetailPage() {
                 break-words
               "
             >
-              {product.title}
+              {productDisplayName}
             </h1>
 
             {/* CATEGORY */}
@@ -2186,7 +2267,7 @@ function ProductDetailPage() {
                       "/images/logo.png"
                     }
                     alt={
-                      item.title
+                      item.images?.[0] ? item.title : ""
                     }
                     className="
                       w-full

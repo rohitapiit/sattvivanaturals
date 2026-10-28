@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Helmet } from "react-helmet";
+import SeoHead from "@/components/SeoHead.jsx";
 import { motion } from "framer-motion";
 import {
   Download,
@@ -55,13 +55,10 @@ const LabReportsPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Lab Reports & Certifications - SattViva Naturals</title>
-        <meta
-          name="description"
-          content="View SattViva Naturals lab reports and quality certifications."
-        />
-      </Helmet>
+      <SeoHead
+        title="Product Quality & Testing | Sattviva Naturals"
+        description="Learn about Sattviva Naturals’ product quality information and review applicable certificates or laboratory reports where available."
+      />
 
       <div className="bg-background">
         <div className="py-5">
@@ -71,12 +68,12 @@ const LabReportsPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h3
+              <h1
                 className="heading-font text-5xl md:text-6xl font-bold mb-1 text-balance"
                 style={{ letterSpacing: "-0.02em" }}
               >
-                Lab Reports & Certifications
-              </h3>
+                Product Quality & Testing
+              </h1>
               <p className="text-xl max-w-2xl mx-auto leading-relaxed">
                 Transparency you can trust. Every product is tested by certified
                 laboratories to ensure purity, quality, and safety.

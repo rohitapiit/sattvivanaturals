@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import SeoHead from "@/components/SeoHead.jsx";
 const API = import.meta.env.VITE_API_URL;
 
 const ContactPage = () => {
@@ -119,6 +120,11 @@ toast.success("Message sent successfully 🎉");
   };
 
   return (
+    <>
+    <SeoHead
+      title="Contact Sattviva Naturals"
+      description="Contact Sattviva Naturals for questions about products, orders or customer support."
+    />
     <div className="max-w-3xl mx-auto py-16 px-4">
 
       <h1 className="text-4xl font-bold text-center mb-3">
@@ -260,6 +266,7 @@ toast.success("Message sent successfully 🎉");
         </button>
       </form>
     </div>
+    </>
   );
 };
 

@@ -1,15 +1,15 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import ProductCatalog from '@/pages/ProductCatalog.jsx';
+import SeoHead from '@/components/SeoHead.jsx';
 
 const StorePage = () => {
   return (
     <>
-      <Helmet>
-        <title>Shop All Products - SattViva Naturals | Wood Pressed Oils, & More</title>
-        <meta name="description" content="Browse our complete collection of wood pressed oils, organic dry fruits, authentic spices, and health products. Free shipping above ₹499." />
-      </Helmet>
+      <SeoHead
+        title="Shop Natural Foods | Sattviva Naturals"
+        description="Browse Sattviva Naturals products. Explore product details, available pack sizes, prices and online ordering information."
+      />
 
       <div className="bg-background">
         <div className="bg-primary text-primary-foreground py-20">

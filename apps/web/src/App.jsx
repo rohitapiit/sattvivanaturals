@@ -51,6 +51,7 @@ import KnowYourFacilityPage from "./pages/KnowYourFacilityPage";
 import GuestReviewPage from "@/pages/GuestReviewPage";
 import BannerManagementPage from "@/pages/BannerManagementPage";
 import AbandonedCartsPage from "@/pages/AbandonedCartsPage.jsx";
+import SeoHead, { SITE_URL } from "@/components/SeoHead.jsx";
 
 // ==========================================
 // APP CONTENT
@@ -60,6 +61,11 @@ import AbandonedCartsPage from "@/pages/AbandonedCartsPage.jsx";
 
 function AppContent() {
   const location = useLocation();
+  const pathname = location.pathname.toLowerCase();
+  const noindex =
+    /^\/(admin(?:\/|$)|admin-contacts$|addresses$|profile$|my-orders$|checkout$|my-reviews$|success$|login$|register$|forgot-password$|reset-password$|guest-review(?:\/|$)|review(?:\/|$)|coming-soon$)/.test(
+      pathname
+    );
 
   const [
     isCartOpen,
@@ -105,6 +111,15 @@ function AppContent() {
 
   return (
     <>
+      <SeoHead
+        noindex={noindex}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Sattviva Naturals",
+          url: SITE_URL,
+        }}
+      />
       <ScrollToTop />
 
       <DashboardLayout
