@@ -87,7 +87,7 @@ const socialLinks = [
            
             </Link>
             <p className="text-primary-foreground/80 leading-relaxed font-light max-w-sm">
-              Bringing you the finest traditional foods, crafted with purity and care. Food the way nature intended, straight from our farms to your table.
+              Explore our product range, review product details and quality information, and find options for online ordering.
             </p>
             <div className="flex gap-4 pt-2">
   {socialLinks.map(({ icon: Icon, url }, i) => (
@@ -147,7 +147,7 @@ const socialLinks = [
           {/* Newsletter */}
           <div className="lg:col-span-3">
             <h4 className="heading-font font-semibold text-xl mb-6 text-green-300">Newsletter</h4>
-            <p className="text-primary-foreground/80 mb-4 text-sm font-light">Subscribe for wellness tips and exclusive offers.</p>
+            <p className="text-primary-foreground/80 mb-4 text-sm font-light">Subscribe for product updates and exclusive offers.</p>
             <form onSubmit={handleNewsletterSubmit} className="space-y-3">
               <Input
                 type="email"

@@ -2,6 +2,10 @@
 RewriteEngine On
 RewriteBase /
 
+# Keep the preferred .com host while preserving the requested path and query.
+RewriteCond %{HTTP_HOST} ^(www\.)?sattvivanaturals\.in$ [NC]
+RewriteRule ^ https://sattvivanaturals.com%{REQUEST_URI} [R=301,L,NE]
+
 # Permanently redirect the old bottle page to the facility page
 RewriteRule ^know-your-bottle/?$ https://sattvivanaturals.com/know-your-facility [R=301,L,NE]
 

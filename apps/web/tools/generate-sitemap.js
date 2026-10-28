@@ -21,11 +21,7 @@ const envFiles = [
   ".env",
 ];
 
-function configuredApiUrl() {
-  if (process.env.SEO_SITEMAP_API_URL) {
-    return process.env.SEO_SITEMAP_API_URL;
-  }
-
+function readEnvFileValue(key) {
   for (const file of envFiles) {
     const filePath = path.resolve(file);
     if (!fs.existsSync(filePath)) {
@@ -35,7 +31,7 @@ function configuredApiUrl() {
     const assignment = fs
       .readFileSync(filePath, "utf8")
       .split(/\r?\n/)
-      .find((line) => /^\s*SEO_SITEMAP_API_URL\s*=/.test(line));
+      .find((line) => new RegExp(`^\\s*${key}\\s*=`).test(line));
 
     if (!assignment) {
       continue;
@@ -52,6 +48,35 @@ function configuredApiUrl() {
   }
 
   return null;
+}
+
+function configuredApiUrl() {
+  const sitemapApiUrl =
+    process.env.SEO_SITEMAP_API_URL ||
+    readEnvFileValue("SEO_SITEMAP_API_URL");
+  if (sitemapApiUrl) {
+    return sitemapApiUrl;
+  }
+
+  const apiUrl =
+    process.env.VITE_API_URL ||
+    readEnvFileValue("VITE_API_URL");
+  if (!apiUrl) {
+    return null;
+  }
+
+  let hostname;
+  try {
+    hostname = new URL(apiUrl).hostname.toLowerCase();
+  } catch {
+    throw new Error("VITE_API_URL must be an absolute URL for sitemap generation.");
+  }
+
+  if (["localhost", "127.0.0.1", "::1"].includes(hostname)) {
+    return null;
+  }
+
+  return apiUrl;
 }
 
 function escapeXml(value) {
@@ -134,7 +159,7 @@ async function main() {
     products = data.products;
   } else {
     console.warn(
-      "SEO_SITEMAP_API_URL is not configured; generating a sitemap without dynamic product and category URLs."
+      "No remote sitemap API URL is configured; generating a sitemap without dynamic product and category URLs. Set SEO_SITEMAP_API_URL or a remote VITE_API_URL."
     );
   }
 

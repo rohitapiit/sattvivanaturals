@@ -52,6 +52,8 @@ const Hero = () => {
   const [currentProductPage, setCurrentProductPage] = useState(0);
 
   const [loadingBanners, setLoadingBanners] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState(false);
 
   const navigate = useNavigate();
 
@@ -103,20 +105,27 @@ const Hero = () => {
 
         const data = await response.json();
 
-        if (data.success) {
-          const activeProducts =
-            (data.products || []).filter(
-              (product) =>
-                product.isActive !== false
-            );
-
-          setProducts(activeProducts);
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Unable to load homepage products."
+          );
         }
+
+        const activeProducts =
+          (data.products || []).filter(
+            (product) =>
+              product.isActive !== false
+          );
+
+        setProducts(activeProducts);
       } catch (error) {
         console.error(
           "FETCH PRODUCTS ERROR:",
           error
         );
+        setProductsError(true);
+      } finally {
+        setLoadingProducts(false);
       }
     };
 
@@ -746,9 +755,26 @@ const Hero = () => {
 
            
 
-            {products.length === 0 ? (
+            {loadingProducts ? (
+              <div
+                className="relative z-10 w-full text-center py-8 text-sm text-[#756e63]"
+                role="status"
+              >
+                Loading products...
+              </div>
+            ) : products.length === 0 ? (
               <div className="relative z-10 w-full text-center py-8 text-sm text-[#756e63]">
-                No products available.
+                <p>
+                  {productsError
+                    ? "The product list is temporarily unavailable."
+                    : "Our product selection is being updated."}
+                </p>
+                <Link
+                  to="/products"
+                  className="mt-3 inline-flex font-semibold text-[#173c2b] underline underline-offset-4"
+                >
+                  Browse all products
+                </Link>
               </div>
             ) : (
               <div className="relative z-10">

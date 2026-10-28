@@ -564,8 +564,14 @@ function ProductDetailPage() {
     !product
   ) {
     return (
-      <div
-        className="
+      <>
+        <SeoHead
+          title="Product Not Found | Sattviva Naturals"
+          description="This product page is unavailable."
+          noindex
+        />
+        <div
+          className="
           max-w-5xl
           mx-auto
           px-4
@@ -615,7 +621,8 @@ function ProductDetailPage() {
             {error}
           </p>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -661,17 +668,44 @@ function ProductDetailPage() {
     product.images?.length > 1;
 
   const relatedProducts =
-    allProducts.filter(
-      (item) =>
-        item._id !==
-        product._id
-    );
+    allProducts
+      .filter((item) => {
+        const itemInStock = item.variants?.length
+          ? item.variants.some(
+              (variant) => (variant.stock ?? item.stock ?? 0) > 0
+            )
+          : item.stock > 0;
+        return (
+          product.category &&
+          item._id !== product._id &&
+          item.isActive !== false &&
+          itemInStock &&
+          item.category?.trim().toLowerCase() ===
+            product.category?.trim().toLowerCase()
+        );
+      })
+      .slice(0, 8);
   const variantSize = selectedVariant?.size?.trim();
   const productDisplayName =
     variantSize &&
     !product.title.toLowerCase().includes(variantSize.toLowerCase())
       ? `${product.title} ${variantSize}`
       : product.title;
+  const productSeoName =
+    product.title.split("|")[0].trim() || productDisplayName;
+  const seoVariantSize = selectedVariant?.size || product.size || "";
+  const normalizedSeoName = productSeoName.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalizedSeoVariantSize = seoVariantSize
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const productSeoTitleName =
+    normalizedSeoVariantSize &&
+    !normalizedSeoName.includes(normalizedSeoVariantSize)
+      ? `${productSeoName} ${seoVariantSize}`
+      : productSeoName;
+  const productSeoTitle = /sattviva naturals/i.test(productSeoTitleName)
+    ? productSeoTitleName
+    : `${productSeoTitleName} - Sattviva Naturals`;
   const productDescription = (product.description || product.title)
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
@@ -747,7 +781,7 @@ function ProductDetailPage() {
   return (
     <>
       <SeoHead
-        title={`${productDisplayName} | Sattviva Naturals`}
+        title={productSeoTitle}
         description={productDescription}
         image={product.images?.[0]}
         type="product"
@@ -2215,7 +2249,9 @@ function ProductDetailPage() {
 
         {/* RELATED PRODUCTS */}
 
-        <div
+        {relatedProducts.length > 0 && (
+        <section
+          aria-labelledby="related-products-heading"
           className="
             mt-12
             sm:mt-16
@@ -2223,6 +2259,7 @@ function ProductDetailPage() {
           "
         >
           <h2
+            id="related-products-heading"
             className="
               text-2xl
               sm:text-3xl
@@ -2233,7 +2270,7 @@ function ProductDetailPage() {
               sm:mb-8
             "
           >
-            You May Also Like
+            More {product.category} Products
           </h2>
 
           <div
@@ -2277,23 +2314,29 @@ function ProductDetailPage() {
                     transition
                   "
                 >
-                  <img
-                    src={
-                      item.images?.[0] ||
-                      "/images/logo.png"
-                    }
-                    alt={
-                      item.images?.[0] ? item.title : ""
-                    }
-                    className="
-                      w-full
+                  <Link
+                    to={`/product/${item._id}`}
+                    aria-label={`View ${item.title}`}
+                    className="block"
+                  >
+                    <img
+                      src={getOptimizedImageUrl(
+                        item.images?.[0] || "/images/logo.png",
+                        480
+                      )}
+                      alt={item.images?.[0] ? item.title : ""}
+                      loading="lazy"
+                      decoding="async"
+                      className="
+                        w-full
 
-                      h-40
-                      sm:h-52
+                        h-40
+                        sm:h-52
 
-                      object-cover
-                    "
-                  />
+                        object-cover
+                      "
+                    />
+                  </Link>
 
                   <div className="p-4">
                     <h3
@@ -2304,7 +2347,12 @@ function ProductDetailPage() {
                         sm:text-lg
                       "
                     >
-                      {item.title}
+                      <Link
+                        to={`/product/${item._id}`}
+                        className="hover:underline"
+                      >
+                        {item.title}
+                      </Link>
                     </h3>
 
                     <p
@@ -2321,27 +2369,19 @@ function ProductDetailPage() {
                       {item.price}
                     </p>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="
-                        w-full
-                        mt-4
-                      "
-                      onClick={() =>
-                        navigate(
-                          `/product/${item._id}`
-                        )
-                      }
+                    <Link
+                      to={`/product/${item._id}`}
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
                     >
                       View Product
-                    </Button>
+                    </Link>
                   </div>
                 </div>
               )
             )}
           </div>
-        </div>
+        </section>
+        )}
       </div>
     </>
   );

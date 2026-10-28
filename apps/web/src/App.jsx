@@ -422,20 +422,26 @@ function AppContent() {
             <Route
               path="*"
               element={
-                <div className="min-h-[60vh] flex items-center justify-center bg-background">
-                  <div className="text-center px-4">
+                <>
+                  <SeoHead
+                    title="Page Not Found | Sattviva Naturals"
+                    description="The page you are looking for does not exist or has been moved."
+                    noindex
+                  />
+                  <div className="min-h-[60vh] flex items-center justify-center bg-background">
+                    <div className="text-center px-4">
 
-                    <h1 className="heading-font text-5xl font-bold text-primary mb-4">
-                      Page Not Found
-                    </h1>
+                      <h1 className="heading-font text-5xl font-bold text-primary mb-4">
+                        Page Not Found
+                      </h1>
 
-                    <p className="text-muted-foreground text-lg mb-8 font-light">
-                      The page you are looking for does not exist or has been moved.
-                    </p>
+                      <p className="text-muted-foreground text-lg mb-8 font-light">
+                        The page you are looking for does not exist or has been moved.
+                      </p>
 
-                    <a
-                      href="/"
-                      className="
+                      <a
+                        href="/"
+                        className="
                         inline-block
                         bg-secondary
                         text-secondary-foreground
@@ -448,12 +454,13 @@ function AppContent() {
                         transition-colors
                         shadow-md
                       "
-                    >
-                      Return to Home
-                    </a>
+                      >
+                        Return to Home
+                      </a>
 
+                    </div>
                   </div>
-                </div>
+                </>
               }
             />
 
