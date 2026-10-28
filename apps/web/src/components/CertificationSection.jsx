@@ -1,28 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Award, ShieldCheck, FlaskConical, BadgeCheck } from 'lucide-react';
+import { FileCheck, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const CertificationSection = () => {
-  const certifications = [
+  const qualityInformation = [
     {
-      icon: Award,
-      title: 'FSSAI Certified',
-      description: 'Licensed by Food Safety and Standards Authority of India'
-    },
-    // {
-    //   icon: ShieldCheck,
-    //   title: 'Organic Certified',
-    //   description: 'Verified organic ingredients and processing methods'
-    // },
-    {
-      icon: FlaskConical,
-      title: 'Lab Tested',
-      description: 'Rigorously tested for purity and quality standards'
+      icon: FileCheck,
+      title: 'Product Information',
+      description: 'Review the product details and ingredients shown on each product page.'
     },
     {
-      icon: BadgeCheck,
-      title: 'Quality Assured',
-      description: 'Meets highest quality benchmarks and safety protocols'
+      icon: ShieldCheck,
+      title: 'Published Reports',
+      description: 'Review reports and supporting documents currently available on our site.'
     }
   ];
 
@@ -36,20 +27,20 @@ const CertificationSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h3 className="heading-font text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">
-            Certified Excellence
-          </h3>
+          <h2 className="heading-font text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">
+            Product Quality Information
+          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Our commitment to quality is backed by recognized certifications
+            Review product information and the reports currently available.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {certifications.map((cert, index) => {
-            const Icon = cert.icon;
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {qualityInformation.map((item, index) => {
+            const Icon = item.icon;
             return (
               <motion.div
-                key={index}
+                key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -60,11 +51,19 @@ const CertificationSection = () => {
                   <Icon className="h-10 w-10 text-green-600" />
                 </div>
                 <h3 className="heading-font text-xl font-semibold mb-3">
-                  {cert.title}
+                  {item.title}
                 </h3>
                 <p className="text-#6F7346 text-sm leading-relaxed">
-                  {cert.description}
+                  {item.description}
                 </p>
+                {index === 1 && (
+                  <Link
+                    to="/lab-reports"
+                    className="mt-4 inline-block text-sm font-semibold text-primary underline underline-offset-4"
+                  >
+                    View quality reports
+                  </Link>
+                )}
               </motion.div>
             );
           })}

@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import SeoHead from "@/components/SeoHead.jsx";
 import { motion } from "framer-motion";
-import {
-  Download,
-  ShieldCheck,
-  FlaskConical,
-  FileCheck,
-  Loader2,
-} from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
@@ -35,24 +29,6 @@ const LabReportsPage = () => {
     fetchReports();
   }, []);
 
-  const certifications = [
-    {
-      icon: ShieldCheck,
-      title: "FSSAI Licensed",
-      description: "License No: 12726998000361",
-    },
-    {
-      icon: FlaskConical,
-      title: "Lab Tested",
-      description: "All products tested quarterly",
-    },
-    {
-      icon: FileCheck,
-      title: "NABL Certified",
-      description: "Testing through certified laboratories",
-    },
-  ];
-
   return (
     <>
       <SeoHead
@@ -75,53 +51,14 @@ const LabReportsPage = () => {
                 Product Quality & Testing
               </h1>
               <p className="text-xl max-w-2xl mx-auto leading-relaxed">
-                Transparency you can trust. Every product is tested by certified
-                laboratories to ensure purity, quality, and safety.
+                Review the reports currently available and check each report
+                for its product, laboratory and date.
               </p>
             </motion.div>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
-          >
-            <h2 className="heading-font text-3xl md:text-4xl font-bold text-foreground mb-12 text-center">
-              Our Certifications
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {certifications.map((cert, index) => {
-                const Icon = cert.icon;
-
-                return (
-                  <motion.div
-                    key={cert.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-card rounded-xl p-6 shadow-sm text-center"
-                  >
-                    <div className="bg-primary/10 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4">
-                      <Icon className="h-8 w-8 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-card-foreground mb-2">
-                      {cert.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {cert.description}
-                    </p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

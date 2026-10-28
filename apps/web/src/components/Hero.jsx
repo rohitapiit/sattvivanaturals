@@ -22,6 +22,7 @@ import {
   Link,
   useNavigate,
 } from "react-router-dom";
+import { getOptimizedImageUrl } from "@/lib/seoImages.js";
 
 // ==========================================
 // API
@@ -842,10 +843,11 @@ const Hero = () => {
                             className="flex items-center justify-center shrink-0 w-[28%] min-w-[75px] h-[105px] md:h-[110px]"
                           >
                             <img
-                              src={productImage}
+                              src={getOptimizedImageUrl(productImage, 320)}
                               alt={product.images?.[0] ? product.title : ""}
                               loading="lazy"
                               decoding="async"
+                              sizes="(max-width: 768px) 28vw, 160px"
                               className="
                                 w-full h-full object-contain
                                 transition-transform duration-300

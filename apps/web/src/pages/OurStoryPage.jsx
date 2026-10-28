@@ -25,7 +25,7 @@ const OurStoryPage = () => {
     },
     {
       title: 'Our Commitment',
-      content: 'We are committed to transparency, quality, and tradition. Every product is lab-tested, every batch is made fresh, and every ingredient is sourced ethically. We believe that food should nourish not just the body, but also the soul. It should connect us to the earth, to our heritage, and to each other.',
+      content: 'We are committed to sharing information about our products and the traditions that inspire our brand. We believe food connects us to the earth, to our heritage, and to each other.',
       image: '/images/WhatsApp Image 2026-07-24 at 23.43.39.jpeg',
       reverse: true
     },

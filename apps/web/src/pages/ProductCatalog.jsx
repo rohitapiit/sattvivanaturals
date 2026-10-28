@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import SeoHead from "@/components/SeoHead.jsx";
+import { getOptimizedImageUrl } from "@/lib/seoImages.js";
 
 import {
   motion,
@@ -116,7 +117,9 @@ const ProductCatalog = () => {
           await response.json();
 
         setProducts(
-          data.products || []
+          (data.products || []).filter(
+            (product) => product.isActive !== false
+          )
         );
       } catch (error) {
         console.error(
@@ -979,12 +982,15 @@ const ProductCatalog = () => {
                           >
                             <img
                               src={
-                                product
-                                  .images?.[0] ||
-                                "/images/logo.png"
+                                getOptimizedImageUrl(
+                                  product.images?.[0] || "/images/logo.png",
+                                  480
+                                )
                               }
                               alt={product.images?.[0] ? product.title : ""}
                               loading="lazy"
+                              decoding="async"
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                               className="
                                 w-full
                                 h-full

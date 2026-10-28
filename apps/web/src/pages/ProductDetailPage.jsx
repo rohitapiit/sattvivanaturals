@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import SeoHead, { getAbsoluteUrl } from "@/components/SeoHead.jsx";
+import { getOptimizedImageUrl } from "@/lib/seoImages.js";
 
 import {
   useParams,
@@ -201,24 +202,34 @@ function ProductDetailPage() {
           // ------------------------------
 
           setCurrentImageIndex(0);
+          setLoading(false);
 
           // ------------------------------
-          // FETCH ALL PRODUCTS
+          // FETCH RELATED PRODUCTS
           // ------------------------------
 
-          const productsResponse =
-            await fetch(
-              `${API}/products`
-            );
+          try {
+            const productsResponse =
+              await fetch(
+                `${API}/products`
+              );
 
-          const productsData =
-            await productsResponse.json();
+            const productsData =
+              await productsResponse.json();
 
-          if (
-            productsData.success
-          ) {
+            if (!productsResponse.ok || !productsData.success) {
+              throw new Error(
+                productsData.message || "Unable to load related products."
+              );
+            }
+
             setAllProducts(
               productsData.products || []
+            );
+          } catch (relatedProductsError) {
+            console.error(
+              "FETCH RELATED PRODUCTS ERROR:",
+              relatedProductsError
             );
           }
         } catch (fetchError) {
@@ -865,9 +876,12 @@ function ProductDetailPage() {
             >
               <img
                 src={
-                  currentImage
+                  getOptimizedImageUrl(currentImage, 1200)
                 }
                 alt={product.images?.length ? productDisplayName : ""}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 className="
                   w-full
                   h-full
@@ -1054,8 +1068,10 @@ function ProductDetailPage() {
                     >
                       <img
                         src={
-                          image ||
-                          "/images/logo.png"
+                          getOptimizedImageUrl(
+                            image || "/images/logo.png",
+                            160
+                          )
                         }
                         alt={
                           `${productDisplayName} ${

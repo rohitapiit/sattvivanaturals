@@ -174,20 +174,14 @@ const socialLinks = [
       © 2026 SattViva Naturals. All rights reserved.
     </div>
 
-    {/* FSSAI */}
+    {/* Product quality information */}
     <div className="flex items-center gap-3 whitespace-nowrap">
-      <img
-        src="/images/FSSAI.PNG"
-        alt="FSSAI"
-        className="h-7 w-auto"
-      />
-
-      <span>
-        FSSAI Lic. No.{" "}
-        <span className="font-semibold text-white">
-        12726998000361
-        </span>
-      </span>
+      <Link
+        to="/lab-reports"
+        className="hover:text-green-300 transition-colors"
+      >
+        Product quality information &amp; reports
+      </Link>
     </div>
 
     {/* Policies */}

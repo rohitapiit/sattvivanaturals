@@ -23,9 +23,9 @@ import { useCart } from "@/hooks/useCart";
 
 const AnnouncementStrip = () => {
   const announcements = [
-    "100% Natural & Authentic",
-    "Lab Tested for Purity",
-    "No Preservatives Added",
+    "Explore Our Product Range",
+    "Product Details & Pack Sizes",
+    "Online Ordering Information",
   ];
 
   return (

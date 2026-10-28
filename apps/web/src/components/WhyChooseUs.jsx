@@ -1,38 +1,38 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Leaf, Droplet, Shield, Sparkles, FlaskConical, Heart, Users } from 'lucide-react';
+import { BookOpen, Droplet, Shield, ShoppingBag, Sparkles, Users } from 'lucide-react';
 
 const WhyChooseUs = () => {
   const features = [
     {
-      icon: Leaf,
-      title: '100% Pure Ingredients',
-      description: 'No additives, preservatives, or artificial substances. Just pure, natural goodness.'
+      icon: BookOpen,
+      title: 'Product Details',
+      description: 'Review the product description, ingredients and available pack sizes.'
     },
     {
       icon: Droplet,
-      title: 'Small Batch Production',
-      description: 'Freshly prepared in limited quantities to ensure maximum quality and freshness.'
+      title: 'Choices for Everyday Cooking',
+      description: 'Browse the current product range and compare available options.'
     },
     {
       icon: Shield,
-      title: 'Traditional Processing',
-      description: 'Time-honored methods passed down through generations, preserving authentic flavors.'
+      title: 'Clear Product Information',
+      description: 'Check the details shown on each product page before you order.'
     },
     {
       icon: Sparkles,
-      title: 'No Chemicals',
-      description: 'Free from harmful chemicals, pesticides, and synthetic processing agents.'
+      title: 'Questions About Products?',
+      description: 'Contact our team if you need more information before ordering.'
     },
     {
-      icon: FlaskConical,
-      title: 'Lab Tested',
-      description: 'Rigorously tested for purity and quality in certified laboratories.'
+      icon: ShoppingBag,
+      title: 'Online Ordering',
+      description: 'View current prices, availability and purchase options on product pages.'
     },
     {
-      icon: Heart,
-      title: 'Ethically Sourced',
-      description: 'Supporting local farmers and sustainable agricultural practices.'
+      icon: Users,
+      title: 'Customer Support',
+      description: 'Get in touch with our team for help with products or orders.'
     },
     
   ];
@@ -48,10 +48,10 @@ const WhyChooseUs = () => {
           className="text-center mb-16"
         >
           <h2 className="heading-font text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">
-            Vishwas — Why Families Trust Us
+            Why Shop with Sattviva Naturals?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Our commitment to purity, tradition, and your wellbeing
+            Browse product details, available pack sizes and ordering information to choose what suits your needs.
           </p>
         </motion.div>
 

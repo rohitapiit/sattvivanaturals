@@ -169,6 +169,32 @@ export const getProducts = async (req, res) => {
   }
 };
 
+export const getSeoIndexProducts = async (req, res) => {
+  try {
+    const products = await Product.find({
+      isActive: { $ne: false },
+    })
+      .select("_id category subcategory updatedAt")
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      products: products.map((product) => ({
+        id: product._id.toString(),
+        category: product.category,
+        subcategory: product.subcategory,
+        updatedAt: product.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("GET SEO PRODUCT INDEX ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load sitemap product data.",
+    });
+  }
+};
+
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);

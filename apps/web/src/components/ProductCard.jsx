@@ -6,6 +6,7 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
+import { getOptimizedImageUrl } from "@/lib/seoImages.js";
 
 const ProductCard = ({ product, index = 0 }) => {
   const { addToCart } = useCart();
@@ -177,12 +178,19 @@ const ProductCard = ({ product, index = 0 }) => {
 
           <div className="relative aspect-square bg-white overflow-hidden rounded-t-2xl flex items-center justify-center">
             <img
-              src={
+              src={getOptimizedImageUrl(
                 product?.images?.[0] ||
                 product?.image ||
-                "/images/logo.png"
+                "/images/logo.png",
+                480
+              )}
+              alt={
+                product?.images?.[0] || product?.image
+                  ? product?.title || ""
+                  : ""
               }
-              alt={product?.title || "Product"}
+              loading="lazy"
+              decoding="async"
               className="
                 h-full
                 w-full
