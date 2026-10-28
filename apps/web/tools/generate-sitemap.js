@@ -118,7 +118,7 @@ function createSitemap(products) {
       ? new Date(product.updatedAt)
       : null;
     entries.set(
-      `/product/${product.id}`,
+      `/product/${product.slug || product.id}`,
       lastModified && !Number.isNaN(lastModified.getTime())
         ? lastModified.toISOString().slice(0, 10)
         : null

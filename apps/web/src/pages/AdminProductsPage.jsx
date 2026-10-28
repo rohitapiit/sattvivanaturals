@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createProductSlug } from "@/lib/productUrls.js";
 const API = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const CropImageDialog = ({ image, onCancel, onSave }) => {
@@ -92,6 +93,7 @@ const AdminProductsPage = () => {
 
   const [formData, setFormData] = useState({
   title: "",
+  slug: "",
   displayOrder: "9999",
   description: "",
   category: "",
@@ -169,6 +171,7 @@ const [uploading, setUploading] = useState(false);
 
   const emptyForm = () => ({
     title: "",
+    slug: "",
     displayOrder: "9999",
     description: "",
     category: "",
@@ -308,6 +311,7 @@ const [uploading, setUploading] = useState(false);
 
     setFormData({
       title: product.title || "",
+      slug: product.slug || "",
       displayOrder: product.displayOrder ?? 9999,
       description: product.description || "",
       category: product.category || "",
@@ -575,6 +579,29 @@ const uploadUseImage = async (file, index) => {
     }
     className="border p-2 w-full"
   />
+
+  <label className="block text-sm font-medium text-gray-700">
+    SEO product URL
+    <div className="mt-1 flex items-center rounded border bg-gray-50 focus-within:ring-2 focus-within:ring-green-600">
+      <span className="whitespace-nowrap pl-3 text-gray-500">/product/</span>
+      <input
+        aria-label="SEO product URL slug"
+        placeholder={createProductSlug(formData.title) || "product-url"}
+        value={formData.slug}
+        maxLength={160}
+        onChange={(event) =>
+          setFormData({ ...formData, slug: createProductSlug(event.target.value) })
+        }
+        className="min-w-0 flex-1 bg-transparent p-2 outline-none"
+      />
+    </div>
+    <span className="mt-1 block text-xs text-gray-500">
+      Leave blank to use the product title. Letters, numbers, and hyphens only.
+      <span className="mt-1 block break-all text-green-700">
+        https://sattvivanaturals.com/product/{createProductSlug(formData.slug || formData.title) || "product-url"}
+      </span>
+    </span>
+  </label>
 
   <label className="block text-sm font-medium text-gray-700">
     Storefront display order (1 = first)

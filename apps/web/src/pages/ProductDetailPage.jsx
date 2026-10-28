@@ -6,6 +6,7 @@ import React, {
 
 import SeoHead, { getAbsoluteUrl } from "@/components/SeoHead.jsx";
 import { getOptimizedImageUrl } from "@/lib/seoImages.js";
+import { getProductPath } from "@/lib/productUrls.js";
 
 import {
   useParams,
@@ -184,7 +185,10 @@ function ProductDetailPage() {
 
           if (
             !fetchedProduct ||
-            String(fetchedProduct._id).toLowerCase() !== id.toLowerCase()
+            (
+              String(fetchedProduct._id).toLowerCase() !== id.toLowerCase() &&
+              fetchedProduct.slug !== id.toLowerCase()
+            )
           ) {
             throw new Error(
               "The API returned a different product than requested."
@@ -273,14 +277,15 @@ function ProductDetailPage() {
     setReviews([]);
     setAverageRating(0);
     setTotalReviews(0);
-    setReviewsLoading(Boolean(id));
+    const productId = product?._id;
+    setReviewsLoading(Boolean(productId));
 
     const fetchReviews =
       async () => {
         try {
           const response =
             await fetch(
-              `${API}/reviews/product/${encodeURIComponent(id)}`,
+              `${API}/reviews/product/${encodeURIComponent(productId)}`,
               { signal: controller.signal }
             );
 
@@ -314,12 +319,12 @@ function ProductDetailPage() {
         }
       };
 
-    if (id) {
+    if (productId) {
       fetchReviews();
     }
 
     return () => controller.abort();
-  }, [id]);
+  }, [product?._id]);
 
   // ==========================================
   // ADD TO CART
@@ -560,7 +565,9 @@ function ProductDetailPage() {
   if (
     loading ||
     (!product && !error) ||
-    (product && String(product._id) !== id)
+    (product &&
+      String(product._id) !== id &&
+      product.slug !== id.toLowerCase())
   ) {
     return (
       <div
@@ -759,7 +766,7 @@ function ProductDetailPage() {
       : []),
     {
       name: productDisplayName,
-      item: getAbsoluteUrl(`/product/${product._id}`),
+      item: getAbsoluteUrl(getProductPath(product)),
     },
   ];
   const productSchema = {
@@ -779,7 +786,7 @@ function ProductDetailPage() {
       ? {
           offers: {
             "@type": "Offer",
-            url: getAbsoluteUrl(`/product/${product._id}`),
+            url: getAbsoluteUrl(getProductPath(product)),
             priceCurrency: "INR",
             price: productPrice.toFixed(2),
             availability:
@@ -813,6 +820,7 @@ function ProductDetailPage() {
         description={productDescription}
         image={product.images?.[0]}
         type="product"
+        canonicalPath={getProductPath(product)}
         structuredData={[productSchema, breadcrumbSchema]}
       />
 
@@ -2345,7 +2353,7 @@ function ProductDetailPage() {
                   "
                 >
                   <Link
-                    to={`/product/${item._id}`}
+                    to={getProductPath(item)}
                     aria-label={`View ${item.title}`}
                     className="block"
                   >
@@ -2378,7 +2386,7 @@ function ProductDetailPage() {
                       "
                     >
                       <Link
-                        to={`/product/${item._id}`}
+                        to={getProductPath(item)}
                         className="hover:underline"
                       >
                         {item.title}
@@ -2400,7 +2408,7 @@ function ProductDetailPage() {
                     </p>
 
                     <Link
-                      to={`/product/${item._id}`}
+                      to={getProductPath(item)}
                       className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
                     >
                       View Product

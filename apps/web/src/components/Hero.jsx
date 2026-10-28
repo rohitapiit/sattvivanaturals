@@ -23,6 +23,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { getOptimizedImageUrl } from "@/lib/seoImages.js";
+import { getProductPath } from "@/lib/productUrls.js";
 
 // ==========================================
 // API
@@ -864,7 +865,7 @@ const Hero = () => {
                       >
                         <div className="flex items-center min-h-[120px] px-3 py-2.5 sm:px-4 md:min-h-[125px] lg:px-4">
                           <Link
-                            to={`/product/${product._id}`}
+                            to={getProductPath(product)}
                             aria-label={`View ${product.title}`}
                             className="flex items-center justify-center shrink-0 w-[28%] min-w-[75px] h-[105px] md:h-[110px]"
                           >
@@ -889,7 +890,7 @@ const Hero = () => {
 
                             <h3 className="font-serif text-[14px] sm:text-[15px] md:text-[17px] leading-snug font-semibold text-[#29463b] line-clamp-2">
                               <Link
-                                to={`/product/${product._id}`}
+                                to={getProductPath(product)}
                                 className="hover:underline"
                               >
                                 {product.title}
@@ -920,7 +921,7 @@ const Hero = () => {
                         </div>
 
                         <Link
-                          to={`/product/${product._id}`}
+                          to={getProductPath(product)}
                           className="
                             relative w-full flex items-center justify-center gap-2
                             py-2.5 md:py-3 bg-[#204b38] text-white

@@ -14,10 +14,12 @@ const SeoHead = ({
   type = "website",
   noindex = false,
   structuredData,
+  canonicalPath,
 }) => {
   const { pathname } = useLocation();
+  const pagePath = canonicalPath || pathname;
   const normalizedPath =
-    pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+    pagePath === "/" ? "/" : pagePath.replace(/\/+$/, "");
   const canonicalUrl = getAbsoluteUrl(normalizedPath);
   const imageUrl = image ? getAbsoluteUrl(image) : undefined;
   const schemas = structuredData

@@ -2,8 +2,19 @@ import Product from "../models/Product.js";
 import Review from "../models/Review.js";
 import GuestReview from "../models/GuestReview.js";
 
+const createProductSlug = (value = "") =>
+  String(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 const normalizeProductData = (body = {}) => {
   const data = { ...body };
+
+  data.slug = createProductSlug(data.slug || data.title);
 
   if (Array.isArray(data.variants) && data.variants.length > 0) {
     const validVariants = data.variants.filter(
@@ -59,9 +70,40 @@ const normalizeProductData = (body = {}) => {
   return data;
 };
 
+const validateProductSlug = (slug, res) => {
+  if (!slug || slug.length > 160 || /^[a-f\d]{24}$/i.test(slug)) {
+    res.status(400).json({
+      success: false,
+      message: "Enter a URL slug containing letters, numbers, and hyphens.",
+    });
+    return false;
+  }
+
+  return true;
+};
+
+const handleProductSaveError = (error, res, operation) => {
+  if (error.code === 11000 && error.keyPattern?.slug) {
+    return res.status(409).json({
+      success: false,
+      message: "That product URL is already in use. Please choose another slug.",
+    });
+  }
+
+  console.error(`${operation} ERROR:`, error);
+  return res.status(500).json({
+    success: false,
+    message: error.message,
+  });
+};
+
 export const createProduct = async (req, res) => {
   try {
     const data = normalizeProductData(req.body);
+
+    if (!validateProductSlug(data.slug, res)) {
+      return;
+    }
 
     if (!data.category || !data.subcategory) {
       return res.status(400).json({
@@ -77,11 +119,7 @@ export const createProduct = async (req, res) => {
       product,
     });
   } catch (error) {
-    console.error("CREATE PRODUCT ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleProductSaveError(error, res, "CREATE PRODUCT");
   }
 };
 
@@ -174,13 +212,14 @@ export const getSeoIndexProducts = async (req, res) => {
     const products = await Product.find({
       isActive: { $ne: false },
     })
-      .select("_id category subcategory updatedAt")
+      .select("_id slug category subcategory updatedAt")
       .lean();
 
     return res.status(200).json({
       success: true,
       products: products.map((product) => ({
         id: product._id.toString(),
+        slug: product.slug || null,
         category: product.category,
         subcategory: product.subcategory,
         updatedAt: product.updatedAt,
@@ -197,16 +236,19 @@ export const getSeoIndexProducts = async (req, res) => {
 
 export const getProductById = async (req, res) => {
   const { id } = req.params;
+  const isObjectId = /^[a-f\d]{24}$/i.test(id);
 
-  if (!/^[a-f\d]{24}$/i.test(id)) {
+  if (!isObjectId && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
     return res.status(400).json({
       success: false,
-      message: "Product ID must be a valid 24-character ObjectId.",
+      message: "Product URL must be a valid slug or 24-character ObjectId.",
     });
   }
 
   try {
-    const product = await Product.findById(id);
+    const product = isObjectId
+      ? await Product.findById(id)
+      : await Product.findOne({ slug: id.toLowerCase() });
 
     if (!product) {
       return res.status(404).json({
@@ -231,6 +273,10 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const data = normalizeProductData(req.body);
+
+    if (!validateProductSlug(data.slug, res)) {
+      return;
+    }
 
     if (!data.category || !data.subcategory) {
       return res.status(400).json({
@@ -261,11 +307,7 @@ export const updateProduct = async (req, res) => {
       product,
     });
   } catch (error) {
-    console.error("UPDATE PRODUCT ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return handleProductSaveError(error, res, "UPDATE PRODUCT");
   }
 };
 

@@ -7,6 +7,16 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    slug: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      maxlength: 160,
+      match: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      unique: true,
+      sparse: true,
+    },
+
     // Admin-controlled storefront ordering: lower numbers appear first.
     displayOrder: {
       type: Number,
