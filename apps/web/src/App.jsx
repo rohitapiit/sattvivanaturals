@@ -16,6 +16,7 @@ import {
 
 import ScrollToTop from "@/components/ScrollToTop.jsx";
 import DashboardLayout from "@/components/DashboardLayout.jsx";
+import ChatWidget from "@/components/chatbot/ChatWidget.jsx";
 import ShoppingCart from "@/components/ShoppingCart.jsx";
 
 // Pages
@@ -468,6 +469,8 @@ function AppContent() {
 
         </div>
       </DashboardLayout>
+
+      {!noindex && <ChatWidget />}
     </>
   );
 }

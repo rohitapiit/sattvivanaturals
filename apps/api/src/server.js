@@ -13,6 +13,7 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import addressRoutes from "./routes/addressRoutes.js";
+import customerAssistantRoutes from "./routes/customerAssistantRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
@@ -43,6 +44,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/customer", customerAssistantRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
