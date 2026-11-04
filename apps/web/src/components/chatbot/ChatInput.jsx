@@ -1,4 +1,5 @@
-﻿import { Send } from "lucide-react";
+﻿
+import { Send } from "lucide-react";
 
 export default function ChatInput({
   value,
@@ -16,12 +17,37 @@ export default function ChatInput({
     }
   };
 
+  const handlePaste = (event) => {
+    if (disabled) return;
+
+    event.preventDefault();
+
+    const pastedText = event.clipboardData.getData("text/plain");
+
+    if (!pastedText) return;
+
+    const textarea = event.currentTarget;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    const updatedValue =
+      value.slice(0, start) + pastedText + value.slice(end);
+
+    onChange(updatedValue);
+
+    requestAnimationFrame(() => {
+      const cursorPosition = start + pastedText.length;
+      textarea.setSelectionRange(cursorPosition, cursorPosition);
+    });
+  };
+
   return (
     <div className="sv-chat-input-area">
       <textarea
         className="sv-chat-textarea"
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         placeholder="Ask about products or orders..."
         rows={1}
