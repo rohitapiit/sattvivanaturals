@@ -1,52 +1,55 @@
 ﻿import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import { Link } from "react-router-dom";
+import { getProductPath } from "@/lib/productUrls.js";
 function ProductCard({ product }) {
   const variant = product.variants?.[0] || {};
-
   const price = variant.price ?? product.price;
   const mrp = variant.cutPrice ?? product.cutPrice;
   const image = product.images?.[0];
+  const productUrl = getProductPath(product);
 
   return (
     <article className="sv-chat-product">
-      {image && (
-        <img
-          className="sv-chat-product-image"
-          src={image}
-          alt={product.title || "Product"}
-          loading="lazy"
-        />
-      )}
+      <Link
+        to={productUrl}
+        className="sv-chat-product-image-link"
+        aria-label={`View ${product.title}`}
+      >
+        {image ? (
+          <img
+            className="sv-chat-product-image"
+            src={image}
+            alt={product.title || "Product"}
+            loading="lazy"
+          />
+        ) : (
+          <div className="sv-chat-product-placeholder">
+            Product
+          </div>
+        )}
+      </Link>
 
       <div className="sv-chat-product-info">
-        <h4>{product.title || "Product"}</h4>
-
-        {product.category && (
-          <p className="sv-chat-product-category">
-            {product.category}
-          </p>
-        )}
-
-        <div className="sv-chat-product-prices">
-          {price != null && (
-            <strong>
-              ₹{Number(price).toLocaleString("en-IN")}
-            </strong>
-          )}
-
-          {mrp != null && Number(mrp) > Number(price) && (
-            <del>
-              ₹{Number(mrp).toLocaleString("en-IN")}
-            </del>
-          )}
-        </div>
+        <Link to={productUrl} className="sv-chat-product-title">
+          {product.title || "Product"}
+        </Link>
 
         {variant.size && (
           <span className="sv-chat-product-size">
             {variant.size}
           </span>
         )}
+
+        <div className="sv-chat-product-prices">
+          {price != null && (
+            <strong>₹{Number(price).toLocaleString("en-IN")}</strong>
+          )}
+
+          {mrp != null && Number(mrp) > Number(price) && (
+            <del>₹{Number(mrp).toLocaleString("en-IN")}</del>
+          )}
+        </div>
 
         {product.stock != null && (
           <p className="sv-chat-product-stock">
@@ -55,6 +58,10 @@ function ProductCard({ product }) {
               : "Currently unavailable"}
           </p>
         )}
+
+        <Link to={productUrl} className="sv-chat-product-view">
+          View product <span>→</span>
+        </Link>
       </div>
     </article>
   );
