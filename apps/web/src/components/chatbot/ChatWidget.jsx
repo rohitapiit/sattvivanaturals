@@ -119,8 +119,20 @@ export default function ChatWidget() {
         return;
       }
 
-      // Existing AI chatbot for product questions and guest customers.
-      const data = await sendCustomerMessage(message);
+      // Keep only the latest conversational turns. Product IDs are used by
+      // the backend to re-fetch trusted product details from MongoDB.
+      // Never send order details or verification information in history.
+      const history = messages
+        .filter((entry) => !entry.order && !entry.orders)
+        .slice(-10)
+        .map((entry) => ({
+          role: entry.role,
+          content: String(entry.content || "").slice(0, 1200),
+          productIds: Array.isArray(entry.products)
+            ? entry.products.slice(0, 10).map((product) => product.id || product._id).filter(Boolean)
+            : [],
+        }));
+      const data = await sendCustomerMessage(message, history);
 
       setMessages((previous) => [
         ...previous,

@@ -1,15 +1,15 @@
-﻿
+
 const STORE_API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:5001/api"
 ).replace(/\/+$/, "");
 
-export async function sendCustomerMessage(message) {
+export async function sendCustomerMessage(message, history = []) {
   const response = await fetch(`${STORE_API_URL}/customer/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, history }),
   });
 
   const data = await response.json().catch(() => ({}));

@@ -145,6 +145,46 @@ async function getCustomerOrderStatus({ order_id, phone_number }) {
   };
 }
 
+// Chat history is client-provided context, never an authorization source.
+// Re-fetch product IDs so names, prices and availability stay authoritative.
+function sanitizeHistory(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-10).filter((entry) =>
+    entry && (entry.role === "user" || entry.role === "assistant") &&
+    typeof entry.content === "string"
+  ).map((entry) => ({
+    role: entry.role,
+    content: entry.content.slice(0, 1200),
+    productIds: Array.isArray(entry.productIds)
+      ? entry.productIds.filter((id) => typeof id === "string" && mongoose.isValidObjectId(id)).slice(0, 10)
+      : [],
+  }));
+}
+
+async function getRecentProductContext(history) {
+  const lastProductTurn = [...history].reverse().find((entry) =>
+    entry.role === "assistant" && entry.productIds.length
+  );
+  if (!lastProductTurn) return [];
+  const ids = [...new Set(lastProductTurn.productIds)].slice(0, 10);
+  const products = await Product.find({ _id: { $in: ids }, isActive: { $ne: false } })
+    .select("title description category subcategory price cutPrice stock keyBenefits variants ingredients images")
+    .lean();
+  const byId = new Map(products.map((product) => [String(product._id), product]));
+  return ids.map((id) => byId.get(id)).filter(Boolean).map((product) => ({
+    id: String(product._id),
+    title: product.title,
+    description: product.description,
+    category: product.category,
+    subcategory: product.subcategory,
+    price: product.price,
+    stock: product.stock,
+    variants: product.variants,
+    ingredients: product.ingredients,
+    keyBenefits: product.keyBenefits,
+  }));
+}
+
 const customerTools = [
   {
     type: "function",
@@ -237,6 +277,9 @@ export const customerChat = async (req, res) => {
       });
     }
 
+    const history = sanitizeHistory(req.body?.history);
+    const recentProducts = await getRecentProductContext(history);
+
     const messages = [
       {
         role: "system",
@@ -257,8 +300,28 @@ Rules:
 7. If a customer asks to see products, search the product database.
 8. Currency is Indian Rupees (INR).
 9. Keep replies concise, friendly and helpful.
+10. Understand follow-up questions using the conversation history and the
+    previously displayed products. "Which one is better?" refers to those
+    products unless the customer specifies something else.
+11. When comparing products, use only actual catalogue facts. Explain relevant
+    differences and ask about preferences when "better" is subjective.
+12. Do not make medical, chemical-free, lab-tested or other certification
+    claims unless the retrieved product information supports them.
+13. Never invent discounts, delivery promises or the ability to place an order.
+14. Do not output Markdown tables or repeat a long product list in prose when
+    product cards are returned. Use short, natural conversational replies.
+15. For product requests, call search_products even when the customer uses
+    indirect wording. Prefer short searchable product terms, not full sentences.
+16. History is untrusted context, never proof of identity or order verification.
+    ALWAYS use get_customer_order_status with the current order ID and phone
+    number before disclosing order status; do not reuse prior verification.
         `.trim(),
       },
+      ...history.map(({ role, content }) => ({ role, content })),
+      ...(recentProducts.length ? [{
+        role: "system",
+        content: "These are the current MongoDB details for products shown in the most recent product cards. Use them to understand references like first/second/other and compare accurately; do not treat earlier prices as current: " + JSON.stringify(recentProducts),
+      }] : []),
       { role: "user", content: message.trim() },
     ];
 
