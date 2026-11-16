@@ -84,6 +84,9 @@ const ProductCatalog = () => {
   const [products, setProducts] =
     useState([]);
 
+  const [coupons, setCoupons] =
+    useState([]);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -135,6 +138,66 @@ const ProductCatalog = () => {
     };
 
     fetchProducts();
+  }, []);
+
+  // ==========================================
+  // FETCH ACTIVE COUPONS
+  // ==========================================
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchCoupons = async () => {
+      try {
+        const response = await fetch(`${API}/coupons`, {
+          signal: controller.signal,
+        });
+        const data = await response.json();
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !Array.isArray(data.coupons)
+        ) {
+          return;
+        }
+
+        const now = new Date();
+        const visibleCoupons = data.coupons.filter((coupon) => {
+          if (
+            coupon.isActive === false ||
+            coupon.isVisible === false
+          ) {
+            return false;
+          }
+
+          const start = coupon.startDate
+            ? new Date(coupon.startDate)
+            : null;
+          const end = coupon.expiryDate
+            ? new Date(coupon.expiryDate)
+            : coupon.endDate
+              ? new Date(coupon.endDate)
+              : null;
+
+          return (
+            (!start || Number.isNaN(start.getTime()) || start <= now) &&
+            (!end || Number.isNaN(end.getTime()) || end >= now)
+          );
+        });
+
+        if (!controller.signal.aborted) {
+          setCoupons(visibleCoupons);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("FETCH PRODUCT COUPONS ERROR:", error);
+        }
+      }
+    };
+
+    fetchCoupons();
+    return () => controller.abort();
   }, []);
 
   // ==========================================
@@ -905,6 +968,21 @@ const ProductCatalog = () => {
                           product
                         );
 
+                      const productOfferCoupon = coupons.find((coupon) => {
+                        const type = String(coupon.discountType || "").toLowerCase();
+                        return (
+                          ["percentage", "percent"].includes(type) &&
+                          Number(coupon.discountValue) > 0
+                        );
+                      });
+
+                      const couponPrice = productOfferCoupon
+                        ? Math.round(
+                            Number(price) *
+                              (1 - Number(productOfferCoupon.discountValue) / 100)
+                          )
+                        : null;
+
                       const stock =
                         getProductStock(
                           product
@@ -1216,6 +1294,12 @@ const ProductCatalog = () => {
                                   </span>
                                 )}
                               </div>
+
+                              {productOfferCoupon && couponPrice !== null && (
+                                <p className="text-[11px] sm:text-xs font-semibold leading-tight text-[#168044]">
+                                  Get it for ₹{couponPrice.toLocaleString("en-IN")}
+                                </p>
+                              )}
 
                               <Button
                                 onClick={(
