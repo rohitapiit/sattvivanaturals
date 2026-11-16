@@ -259,6 +259,15 @@ const Hero = () => {
     currentProductPage * productsPerPage,
     currentProductPage * productsPerPage + productsPerPage
   );
+  // Select an active percentage coupon for product-card offers
+  const productOfferCoupon = coupons.find((coupon) => {
+    const type = String(coupon.discountType || "").toLowerCase();
+
+    return (
+      ["percentage", "percent"].includes(type) &&
+      Number(coupon.discountValue) > 0
+    );
+  });
 
   const handlePreviousProducts = (event) => {
     event.stopPropagation();
@@ -845,6 +854,16 @@ const Hero = () => {
                       cutPrice !== null &&
                       cutPrice !== undefined &&
                       Number(cutPrice) > Number(sellingPrice);
+                      // Calculate additional coupon discount on the CURRENT selling price
+                      const couponPercent = productOfferCoupon
+                        ? Number(productOfferCoupon.discountValue)
+                        : 0;
+
+                      const couponPrice = productOfferCoupon
+                        ? Math.round(
+                            Number(sellingPrice) * (1 - couponPercent / 100)
+                          )
+                        : null;
 
                     return (
                       <div
@@ -917,6 +936,12 @@ const Hero = () => {
                                 {isOutOfStock ? "Out of stock" : "In stock"}
                               </span>
                             </div>
+
+                            {productOfferCoupon && couponPrice !== null && (
+                              <p className="mt-1.5 text-[11px] md:text-xs font-semibold leading-tight text-[#168044]">
+                                Get it for ₹{couponPrice.toLocaleString("en-IN")}
+                              </p>
+                            )}
                           </div>
                         </div>
 
