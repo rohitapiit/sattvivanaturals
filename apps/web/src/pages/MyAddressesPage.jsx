@@ -185,8 +185,9 @@ const isFormValid =
     newErrors.fullName = "Only letters are allowed";
   }
 
-  if (!/^\d{10}$/.test(formData.phone)) {
-    newErrors.phone = "Enter a valid 10-digit phone number";
+  if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+    newErrors.phone =
+      "Phone number must be exactly 10 digits and start with 6, 7, 8 or 9.";
   }
 
   if (!formData.address.trim()) {
@@ -512,7 +513,7 @@ errors.fullName && (
         onChange={(e) =>
           setFormData({
             ...formData,
-            phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+            phone: e.target.value.replace(/\D/g, ""),
           })
         }
       />

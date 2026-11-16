@@ -24,7 +24,7 @@ const ContactPage = () => {
   }
 
   if (name === "phone") {
-    newValue = value.replace(/\D/g, "").slice(0, 10);
+    newValue = value.replace(/\D/g, "");
   }
 
   setFormData((prev) => ({
@@ -58,8 +58,9 @@ const ContactPage = () => {
   }
 
   // Phone
-  if (!/^\d{10}$/.test(formData.phone)) {
-    newErrors.phone = "Phone number must be exactly 10 digits";
+  if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+    newErrors.phone =
+      "Phone number must be exactly 10 digits and start with 6, 7, 8 or 9.";
   }
 
   // Message

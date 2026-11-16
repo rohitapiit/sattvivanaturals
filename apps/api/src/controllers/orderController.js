@@ -11,6 +11,26 @@ import PDFDocument from "pdfkit";
 import Counter from "../models/Counter.js";
 import crypto from "crypto";
 
+// Validate Indian mobile numbers: exactly 10 digits, starting with 6, 7, 8 or 9.
+const isValidIndianMobile = (phone) => {
+  return /^[6-9]\d{9}$/.test(String(phone || "").trim());
+};
+
+const validateOrderPhoneNumbers = (shippingAddress, billingAddress) => {
+  if (!isValidIndianMobile(shippingAddress?.phone)) {
+    return "Shipping phone number must be exactly 10 digits.";
+  }
+
+  if (
+    billingAddress?.phone &&
+    !isValidIndianMobile(billingAddress.phone)
+  ) {
+    return "Billing phone number must be exactly 10 digits.";
+  }
+
+  return null;
+};
+
 import {
   createShiprocketOrder,
   cancelShiprocketOrder,
@@ -202,6 +222,19 @@ export const createOrder = async (req, res) => {
       couponCode,
       discount,
     } = req.body;
+
+    // Validate customer phone numbers before processing the order.
+    const phoneError = validateOrderPhoneNumbers(
+      shippingAddress,
+      billingAddress
+    );
+
+    if (phoneError) {
+      return res.status(400).json({
+        success: false,
+        message: phoneError,
+      });
+    }
 
     if (paymentMethod === "COD" && couponCode) {
       return res.status(400).json({
@@ -824,6 +857,19 @@ export const createBuyNowOrder = async (req, res) => {
       couponCode,
       discount,
     } = req.body;
+
+    // Validate customer phone numbers before processing the order.
+    const phoneError = validateOrderPhoneNumbers(
+      shippingAddress,
+      billingAddress
+    );
+
+    if (phoneError) {
+      return res.status(400).json({
+        success: false,
+        message: phoneError,
+      });
+    }
 
     const userId = req.user?.userId || null;
 

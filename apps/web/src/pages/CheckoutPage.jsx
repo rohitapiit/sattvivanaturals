@@ -151,10 +151,7 @@ const AddressForm = ({
           value={address.phone}
           inputMode="numeric"
           onChange={(event) => {
-            const value = event.target.value
-              .replace(/\D/g, "")
-              .slice(0, 10);
-
+            const value = event.target.value.replace(/\D/g, "");
             handleChange("phone", value);
           }}
         />
@@ -755,13 +752,9 @@ const CheckoutPage = () => {
         "Enter a valid email";
     }
 
-    if (
-      !/^\d{10}$/.test(
-        address.phone
-      )
-    ) {
+    if (!/^[6-9]\d{9}$/.test(address.phone)) {
       newErrors.phone =
-        "Enter a valid 10-digit phone number";
+        "Phone number must be exactly 10 digits and start with 6, 7, 8 or 9.";
     }
 
     if (!address.address.trim()) {
