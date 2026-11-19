@@ -526,7 +526,7 @@
 @media (max-width: 520px) {
   .sattviva-chatbot .sv-chat-launcher {
     right: 16px;
-    bottom: 17px;
+    bottom: calc(72px + 16px + env(safe-area-inset-bottom, 0px));
     width: 55px;
     height: 55px;
   }
