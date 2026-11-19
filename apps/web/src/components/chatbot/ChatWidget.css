@@ -38,7 +38,7 @@
 }
 
 .sattviva-chatbot .sv-chat-launcher.active {
-  background: var(--sv-chat-primary-dark);
+  display: none;
 }
 
 /* Chat window */
